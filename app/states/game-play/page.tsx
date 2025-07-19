@@ -227,46 +227,27 @@ export default function GamePlayPage() {
           </div>
         </div>
 
-        {/* Team scores */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 px-4 md:px-12 mb-8">
-          <div
-            className={`${team1Colors.bg} px-8 md:px-12 py-6 md:py-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-300 w-full md:w-auto`}
-            style={{
-              viewTransitionName: "team1-score-card",
-            }}
-          >
-            <div
-              className="text-white text-2xl md:text-3xl font-bold text-center drop-shadow-lg mb-2"
-              style={{
-                viewTransitionName: "team1-name",
-              }}
-            >
-              {gameData.team1Config.name}
-            </div>
-            <div className="text-blue-300 text-4xl md:text-6xl font-bold text-center drop-shadow-lg">
-              {gameData.currentTeam === 'team1' ? (gameData.roundScore ?? 0) : 0}
-            </div>
-            <div className="text-xs text-gray-300 text-center mt-1">Round Score</div>
+        {/* Round Pool Score (center top) */}
+        <div className="flex justify-center mt-8 mb-4">
+          <div className="bg-yellow-400 border-4 border-yellow-700 rounded-2xl px-12 py-6 shadow-2xl flex flex-col items-center">
+            <span className="text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg">{gameData.roundScore ?? 0}</span>
           </div>
-
+        </div>
+        {/* Team overall scores (left/right) */}
+        <div className="flex flex-row justify-between items-center gap-6 md:gap-8 px-4 md:px-12 mb-8">
           <div
-            className={`${team2Colors.bg} px-8 md:px-12 py-6 md:py-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-300 w-full md:w-auto`}
-            style={{
-              viewTransitionName: "team2-score-card",
-            }}
+            className={`${team1Colors.bg} px-6 md:px-8 py-4 md:py-6 rounded-2xl shadow-2xl flex flex-col items-center`}
+            style={{ viewTransitionName: "team1-score-card" }}
           >
-            <div
-              className="text-white text-2xl md:text-3xl font-bold text-center drop-shadow-lg mb-2"
-              style={{
-                viewTransitionName: "team2-name",
-              }}
-            >
-              {gameData.team2Config.name}
-            </div>
-            <div className="text-blue-300 text-4xl md:text-6xl font-bold text-center drop-shadow-lg">
-              {gameData.currentTeam === 'team2' ? (gameData.roundScore ?? 0) : 0}
-            </div>
-            <div className="text-xs text-gray-300 text-center mt-1">Round Score</div>
+            <span className="text-lg font-bold text-yellow-100 mb-1">{gameData.team1Config.name}</span>
+            <span className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">{gameData.team1Score}</span>
+          </div>
+          <div
+            className={`${team2Colors.bg} px-6 md:px-8 py-4 md:py-6 rounded-2xl shadow-2xl flex flex-col items-center`}
+            style={{ viewTransitionName: "team2-score-card" }}
+          >
+            <span className="text-lg font-bold text-yellow-100 mb-1">{gameData.team2Config.name}</span>
+            <span className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">{gameData.team2Score}</span>
           </div>
         </div>
 
