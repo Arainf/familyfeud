@@ -27,6 +27,8 @@ interface GameControlsCardProps {
   team1Score: number
   team2Score?: number
   currentTeam?: 'team1' | 'team2'
+  onStrike?: () => void
+  onResetStrikes?: () => void
 }
 
 const GameControlsCard: React.FC<GameControlsCardProps> = ({
@@ -49,6 +51,8 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
   team1Score,
   team2Score,
   currentTeam = 'team1',
+  onStrike,
+  onResetStrikes,
 }) => {
   const overallScore = currentTeam === 'team1' ? team1Score : (team2Score ?? 0)
   return (
@@ -140,13 +144,16 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
           </div>
         </div>
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => setStrikes((prev) => Math.min(3, prev + 1))} variant="destructive" size="sm">
+        <div className="grid grid-cols-3 gap-2">
+          <Button onClick={() => { setStrikes((prev) => Math.min(3, prev + 1)); if (onStrike) onStrike(); }} variant="destructive" size="sm">
             <X className="w-4 h-4 mr-1" />
             Strike ({strikes}/3)
           </Button>
           <Button onClick={awardPoints} className="bg-green-600 hover:bg-green-700" size="sm">
             Award Points
+          </Button>
+          <Button onClick={onResetStrikes} className="bg-gray-600 hover:bg-gray-700" size="sm">
+            Reset Strikes
           </Button>
         </div>
       </CardContent>

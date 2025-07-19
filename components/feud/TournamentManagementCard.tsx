@@ -2,7 +2,7 @@ import React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, PaletteIcon, FileText, Plus } from "lucide-react"
+import { Trophy, PaletteIcon, FileText, Plus, CheckCircle } from "lucide-react"
 
 interface TournamentManagementCardProps {
   currentTournament: any
@@ -10,6 +10,8 @@ interface TournamentManagementCardProps {
   setShowTournamentDialog: (open: boolean) => void
   setShowTeamCustomization: (open: boolean) => void
   setShowMatchQuestions: (open: boolean) => void
+  setCurrentMatch: (match: any) => void
+  onCompleteMatch: (matchId: string) => void
 }
 
 const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
@@ -18,6 +20,8 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
   setShowTournamentDialog,
   setShowTeamCustomization,
   setShowMatchQuestions,
+  setCurrentMatch,
+  onCompleteMatch,
 }) => (
   <Card className="col-span-6 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
     <CardHeader>
@@ -65,9 +69,35 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
             </Button>
           </div>
 
+          {/* All Matches List */}
+          <div className="mt-4">
+            <h4 className="text-white font-medium mb-2">Matches</h4>
+            <div className="space-y-2">
+              {currentTournament.matches.map((match: any, idx: number) => (
+                <div
+                  key={match.id}
+                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${currentMatch?.id === match.id ? 'bg-blue-800/60' : 'bg-gray-800/60 hover:bg-gray-700'}`}
+                  onClick={() => setCurrentMatch(match)}
+                >
+                  <div>
+                    <span className="font-bold text-white">Match {idx + 1}:</span> <span className="text-gray-200">{match.team1Id} vs {match.team2Id}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={match.status === 'completed' ? 'bg-green-600' : 'bg-blue-600'}>{match.status}</Badge>
+                    {match.status !== 'completed' && (
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={e => { e.stopPropagation(); onCompleteMatch(match.id); }}>
+                        <CheckCircle className="w-4 h-4 mr-1" /> Complete
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Current Match Info */}
           {currentMatch && (
-            <div className="bg-gray-800/50 rounded-lg p-4">
+            <div className="bg-gray-800/50 rounded-lg p-4 mt-4">
               <h4 className="text-white font-medium mb-2">Current Match</h4>
               <div className="flex items-center justify-between">
                 <span className="text-gray-300">

@@ -74,6 +74,7 @@ export default function GamePlayPage() {
   const router = useRouter();
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [showPassOrPlayOverlay, setShowPassOrPlayOverlay] = useState(false)
+  const [showStrikeOverlay, setShowStrikeOverlay] = useState(false)
 
   useEffect(() => {
     const loadGameState = () => {
@@ -83,6 +84,13 @@ export default function GamePlayPage() {
           const parsed = JSON.parse(saved)
           setGameData(parsed)
           setShowPassOrPlayOverlay(localStorage.getItem('showPassOrPlayOverlay') === 'true')
+          if (localStorage.getItem('showStrikeOverlay') === 'true') {
+            setShowStrikeOverlay(true)
+            setTimeout(() => {
+              setShowStrikeOverlay(false)
+              localStorage.setItem('showStrikeOverlay', 'false')
+            }, 1200)
+          }
         } catch (error) {
           console.error("Error parsing game state:", error)
         }
@@ -142,20 +150,6 @@ export default function GamePlayPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 relative overflow-hidden">
       {/* Cumulative Scores (top left/right) */}
-      {(gameData.currentRound !== 1 && gameData.currentRound !== 'tiebreaker') && (
-        <>
-          <div className="fixed top-4 left-4 z-40 bg-gray-900/90 border-2 border-yellow-400 rounded-xl px-6 py-3 shadow-xl flex flex-col items-center">
-            <span className="text-lg font-bold text-yellow-300">{gameData.team1Config.name}</span>
-            <span className="text-3xl font-extrabold text-white">{gameData.team1Score}</span>
-            <span className="text-xs text-gray-300">Cumulative</span>
-          </div>
-          <div className="fixed top-4 right-4 z-40 bg-gray-900/90 border-2 border-yellow-400 rounded-xl px-6 py-3 shadow-xl flex flex-col items-center">
-            <span className="text-lg font-bold text-yellow-300">{gameData.team2Config.name}</span>
-            <span className="text-3xl font-extrabold text-white">{gameData.team2Score}</span>
-            <span className="text-xs text-gray-300">Cumulative</span>
-          </div>
-        </>
-      )}
       {showPassOrPlayOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="text-center animate-pulse">
@@ -180,19 +174,10 @@ export default function GamePlayPage() {
       </div>
 
       {/* Strike Overlay */}
-      {gameData.showStrikeOverlay && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="relative">
-            <X
-              className="text-red-500 animate-bounce"
-              style={{
-                width: "400px",
-                height: "400px",
-                strokeWidth: "8",
-                filter: "drop-shadow(0 0 40px rgba(239, 68, 68, 0.9))",
-              }}
-            />
-            <div className="absolute inset-0 bg-red-500 rounded-full opacity-10 animate-ping" />
+      {showStrikeOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="text-center animate-pulse">
+            <span className="text-red-500 text-[180px] md:text-[300px] font-extrabold drop-shadow-2xl">✖</span>
           </div>
         </div>
       )}
@@ -309,7 +294,7 @@ export default function GamePlayPage() {
                               {gameData.revealedAnswers[index] && (
                                 <div className="bg-yellow-400 px-4 md:px-6 py-2 md:py-3 rounded-xl shadow-xl animate-bounce">
                                   <span className="text-2xl md:text-3xl font-bold text-blue-900">
-                                    {answer.points * getPointMultiplier(gameData.currentRound)}
+                                    {answer.points }
                                   </span>
                                 </div>
                               )}

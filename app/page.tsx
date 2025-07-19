@@ -68,6 +68,7 @@ import QuestionCard from "@/components/feud/QuestionCard"
 import TournamentManagementCard from "@/components/feud/TournamentManagementCard"
 import QuickActionsCard from "@/components/feud/QuickActionsCard"
 import GameStateNavigationBar from "@/components/feud/GameStateNavigationBar"
+import BracketManagementCard from "@/components/feud/BracketManagementCard"
 
 // Game States for the new flow
 type GameState =
@@ -841,6 +842,10 @@ export default function FamilyFeudControl() {
             showScoreAnimation={showScoreAnimation}
             animatingScore={animatingScore}
             team1Score={team1Score}
+            team2Score={team2Score}
+            currentTeam={currentTeam}
+            onStrike={() => { localStorage.setItem('showStrikeOverlay', 'true'); }}
+            onResetStrikes={() => { setStrikes(0); localStorage.setItem('showStrikeOverlay', 'false'); }}
           />
 
           {/* Team Scores */}
@@ -899,6 +904,17 @@ export default function FamilyFeudControl() {
             setShowTournamentDialog={setShowTournamentDialog}
             setShowTeamCustomization={setShowTeamCustomization}
             setShowMatchQuestions={setShowMatchQuestions}
+            setCurrentMatch={setCurrentMatch}
+            onCompleteMatch={(matchId) => {
+              if (!currentTournament) return;
+              const updatedMatches = currentTournament.matches.map((m) => m.id === matchId ? { ...m, status: 'completed' } : m);
+              setCurrentTournament({ ...currentTournament, matches: updatedMatches });
+              // Optionally update bracket logic here
+            }}
+          />
+          <BracketManagementCard
+            currentTournament={currentTournament}
+            currentMatch={currentMatch}
           />
 
           <QuickActionsCard

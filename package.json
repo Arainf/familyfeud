@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@g-loot/react-tournament-brackets": "^1.0.31-rc",
     "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.525.0",
     "next": "14.0.0",
     "next-view-transitions": "^0.3.0",
     "react": "^18",
