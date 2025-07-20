@@ -77,7 +77,7 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
                 <div
                   key={match.id}
                   className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${currentMatch?.id === match.id ? 'bg-blue-800/60' : 'bg-gray-800/60 hover:bg-gray-700'}`}
-                  onClick={() => setCurrentMatch(match)}
+                  onClick={() => setCurrentMatch(match)} // This ensures parent state updates
                 >
                   <div>
                     <span className="font-bold text-white">Match {idx + 1}:</span> <span className="text-gray-200">{match.team1Id} vs {match.team2Id}</span>

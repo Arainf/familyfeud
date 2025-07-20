@@ -67,6 +67,7 @@ export default function TeamVsPage() {
   }, [])
 
   useEffect(() => {
+    const channel = new BroadcastChannel("feud-game-state");
     const gameStateRoutes = {
       idle: "/states/idle",
       "tournament-start": "/states/tournament-start",
@@ -81,20 +82,14 @@ export default function TeamVsPage() {
       "bracket-update": "/states/bracket-update",
       "tournament-winner": "/states/tournament-winner",
     };
-    const interval = setInterval(() => {
-      const saved = localStorage.getItem("familyFeudGameState");
-      if (saved) {
-        try {
-          const { gameState } = JSON.parse(saved);
-          const currentPath = window.location.pathname;
-          const targetPath = gameStateRoutes[(gameState as keyof typeof gameStateRoutes)] || "/states/idle";
-          if (currentPath !== targetPath) {
-            router.replace(targetPath);
-          }
-        } catch {}
+    channel.onmessage = (event) => {
+      const { gameState } = event.data;
+      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      if (window.location.pathname !== targetPath) {
+        router.replace(targetPath);
       }
-    }, 100);
-    return () => clearInterval(interval);
+    };
+    return () => channel.close();
   }, [router]);
 
   if (!gameData) {

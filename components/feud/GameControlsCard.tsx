@@ -55,6 +55,7 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
   onResetStrikes,
 }) => {
   const overallScore = currentTeam === 'team1' ? team1Score : (team2Score ?? 0)
+
   return (
     <Card className="col-span-4 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
       <CardHeader>
@@ -81,6 +82,19 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
           </div>
           <div className="text-xs text-gray-400 mt-2">Current Team: {currentTeam === 'team1' ? 'Team 1' : 'Team 2'}</div>
           <div className="text-yellow-300 text-lg font-bold mt-2">Overall: {overallScore}</div>
+          <div className="mt-4 flex justify-center">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                // Set round summary info in localStorage
+                localStorage.setItem('showRoundSummary', 'true');
+                localStorage.setItem('roundWinner', currentTeam === 'team1' ? 'Team 1' : 'Team 2');
+                localStorage.setItem('roundPoints', roundScore.toString());
+              }}
+            >
+              Show Round Summary
+            </Button>
+          </div>
         </div>
         {/* Timer */}
         <div className="bg-gray-800/50 rounded-lg p-4">

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users } from "lucide-react"
@@ -40,13 +40,29 @@ const TeamScoresCard: React.FC<TeamScoresCardProps> = ({
   onSwitchTeam,
   onActivatePassOrPlay,
 }) => {
+  const [showStealOverlay, setShowStealOverlay] = useState(false);
+
   const handleActivate = () => {
     if (onActivatePassOrPlay) onActivatePassOrPlay()
     if (onSwitchTeam) onSwitchTeam()
   }
 
+  // Fade out the STEAL overlay after 1.5s
+  React.useEffect(() => {
+    if (showStealOverlay) {
+      const timeout = setTimeout(() => setShowStealOverlay(false), 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [showStealOverlay]);
+
   return (
     <Card className="col-span-4 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
+      {/* STEAL Overlay */}
+      {showStealOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-out">
+          <h1 className="text-8xl font-extrabold text-yellow-400 drop-shadow-2xl animate-pulse">STEAL</h1>
+        </div>
+      )}
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <Users className="w-5 h-5" />
@@ -119,6 +135,17 @@ const TeamScoresCard: React.FC<TeamScoresCardProps> = ({
             <div className="text-gray-400 text-sm mb-1">Round Score</div>
             <div className="text-white font-medium">{roundScore}</div>
           </div>
+        </div>
+        {/* Steal Button */}
+        <div className="mt-4 flex justify-center">
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => {
+              localStorage.setItem('showStealVisualOverlay', 'true');
+            }}
+          >
+            Steal
+          </Button>
         </div>
       </CardContent>
     </Card>

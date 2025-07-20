@@ -232,6 +232,8 @@ interface Tournament {
   currentMatchIndex: number
 }
 
+const broadcast = typeof window !== "undefined" ? new BroadcastChannel("feud-game-state") : null;
+
 export default function FamilyFeudControl() {
   // User management
   const [user, setUser] = useState<UserType | null>(null)
@@ -278,6 +280,8 @@ export default function FamilyFeudControl() {
   const [currentTeam, setCurrentTeam] = useState<'team1' | 'team2'>("team1")
   const [faceOffWinnerTeam, setFaceOffWinnerTeam] = useState<'team1' | 'team2' | null>(null)
   const [showPlayPass, setShowPlayPass] = useState(false)
+  const [stealActive, setStealActive] = useState(false);
+  const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
 
   // Dialog states
   const [showTeamCustomization, setShowTeamCustomization] = useState(false)
@@ -457,12 +461,12 @@ export default function FamilyFeudControl() {
             id: `match-${i}-${j}`,
             team1Id: tournamentTeams[i].name,
             team2Id: tournamentTeams[j].name,
-            status: "pending",
+            status: 'pending',
             questions: [],
             currentRound: 1,
             currentQuestionIndex: 0,
             gameState: "idle",
-          })
+          } as Match)
         }
       }
     }
@@ -643,6 +647,10 @@ export default function FamilyFeudControl() {
         updateTournamentInStorage()
       }
     }
+    // Broadcast the new state to all viewers
+    if (broadcast) {
+      broadcast.postMessage({ gameState: newState })
+    }
   }
 
   const nextRound = () => {
@@ -660,6 +668,11 @@ export default function FamilyFeudControl() {
         setCurrentTournament(updatedTournament)
         updateTournamentInStorage()
       }
+    }
+    // Reset Answers Reveal state if round was marked done
+    if (localStorage.getItem('roundDone') === 'true') {
+      localStorage.setItem('showAllAnswers', 'false');
+      localStorage.setItem('roundDone', 'false');
     }
   }
 
@@ -793,6 +806,47 @@ export default function FamilyFeudControl() {
     setRevealedAnswers(newRevealedAnswers)
   }
 
+  // Handler for strike logic
+  const handleStrike = () => {
+    setStrikes((prev) => {
+      const newStrikes = Math.min(3, prev + 1);
+      if (newStrikes === 3 && !stealActive) {
+        // Trigger steal overlay for the other team
+        const otherTeam = currentTeam === 'team1' ? 'team2' : 'team1';
+        setStealActive(true);
+        setStealTeam(otherTeam);
+        localStorage.setItem('showStealOverlay', 'true');
+        localStorage.setItem('stealTeam', otherTeam);
+      }
+      return newStrikes;
+    });
+  };
+
+  // Listen for steal overlay result (from game-play page)
+  useEffect(() => {
+    const handleStorage = () => {
+      if (stealActive && localStorage.getItem('showStealOverlay') === 'false') {
+        // Steal overlay closed, check result
+        const stealResult = localStorage.getItem('stealResult');
+        if (stealResult === 'success') {
+          // Stealing team gets the roundScore
+          if (stealTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
+          else setTeam2Score((prev) => prev + roundScore);
+        } else if (stealResult === 'fail') {
+          // Original team keeps the roundScore
+          if (currentTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
+          else setTeam2Score((prev) => prev + roundScore);
+        }
+        setRoundScore(0);
+        setStrikes(0);
+        setStealActive(false);
+        localStorage.removeItem('stealResult');
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [stealActive, stealTeam, currentTeam, roundScore]);
+
   // Auth dialog
   if (!user) {
     return (
@@ -844,7 +898,7 @@ export default function FamilyFeudControl() {
             team1Score={team1Score}
             team2Score={team2Score}
             currentTeam={currentTeam}
-            onStrike={() => { localStorage.setItem('showStrikeOverlay', 'true'); }}
+            onStrike={handleStrike}
             onResetStrikes={() => { setStrikes(0); localStorage.setItem('showStrikeOverlay', 'false'); }}
           />
 
@@ -883,15 +937,16 @@ export default function FamilyFeudControl() {
             question={currentMatch?.questions.find((q) => q.round === currentRound)?.question || "No question set."}
             answers={currentMatch?.questions.find((q) => q.round === currentRound)?.answers || []}
             revealedAnswers={revealedAnswers}
-            onReveal={(idx) => {
-              // Reveal the answer and add points to the round pool only
+            onReveal={(idx) => {   // Only reveal the answer, do not add points
               revealAnswer(idx)
+            }}
+            onAwardPoints={(idx) => {
+              // Add points to the round pool only when this is called
               const answer = currentMatch?.questions.find((q) => q.round === currentRound)?.answers[idx]
               if (answer) {
                 setRoundScore((prev) => prev + answer.points)
               }
             }}
-            onAwardPoints={() => {}}
             currentTeam={currentTeam === "team1"
               ? currentTournament?.teams[0]?.name || "Team 1"
               : currentTournament?.teams[1]?.name || "Team 2"}
