@@ -862,7 +862,7 @@ export default function FamilyFeudControl() {
 
   return (
     <div
-      className="min-h-screen text-white p-4"
+      className="min-h-full text-white p-4"
       style={{
         backgroundImage: "url('/idle-bg.png')",
         backgroundSize: "cover",

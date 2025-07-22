@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +26,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   currentTeam,
 }) => {
   const [showAll, setShowAll] = useState(false);
+  const revealSound = useRef(typeof Audio !== 'undefined' ? new Audio('/sounds/reveal.mp3') : null);
+
+  const playSound = () => {
+    if (revealSound.current) {
+      revealSound.current.currentTime = 0; // Reset the sound to start
+      revealSound.current.play();
+    }
+  };
 
   return (
     <Card className="col-span-4 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
@@ -54,6 +62,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <>
                   <Button
                     onClick={() => {
+                      playSound();
                       onReveal(idx);
                       onAwardPoints(idx);
                     }}
@@ -64,6 +73,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                   </Button>
                   <Button
                     onClick={() => {
+                      playSound();
                       onReveal(idx);
                     }}
                     size="sm"
