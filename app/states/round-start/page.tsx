@@ -54,7 +54,6 @@ export default function RoundStartPage() {
         className="w-[700px] max-w-full ml-[-35%] drop-shadow-2xl z-10 object-none"
         style={{ marginTop: "8vh", marginBottom: "8vh" }}
       />
-
     </div>
   );
 }
