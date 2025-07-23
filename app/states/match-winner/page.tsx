@@ -20,10 +20,13 @@ export default function MatchWinnerPage() {
       "match-winner": "/states/match-winner",
       "bracket-update": "/states/bracket-update",
       "tournament-winner": "/states/tournament-winner",
+      "grand-winner": "/states/grand-winner",
     };
     channel.onmessage = (event) => {
       const { gameState } = event.data;
-      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      const targetPath =
+        gameStateRoutes[gameState as keyof typeof gameStateRoutes] ||
+        "/states/idle";
       if (window.location.pathname !== targetPath) {
         router.replace(targetPath);
       }
@@ -47,7 +50,9 @@ export default function MatchWinnerPage() {
   if (!match || !gameData.tournament.teams || !isFinalRound) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-900 via-orange-900 to-yellow-700">
+
         <span className="text-white text-2xl animate-pulse">Winner will be revealed after the final round!</span>
+
       </div>
     );
   }
@@ -145,6 +150,7 @@ export default function MatchWinnerPage() {
             <span className="text-base font-semibold text-gray-400 tracking-wide mb-2">Good effort!</span>
             <span className="text-base text-gray-300 italic text-center">{loser?.motto || ""}</span>
           </div>
+
         </div>
 
         <button

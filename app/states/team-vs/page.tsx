@@ -1,22 +1,31 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Crown, Star, Zap, Shield, Trophy, Target, Flame, Heart } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import ConnectionStatus from "@/components/ConnectionStatus"
+import React, { useEffect, useState } from "react";
+import {
+  Crown,
+  Star,
+  Zap,
+  Shield,
+  Trophy,
+  Target,
+  Flame,
+  Heart,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import ConnectionStatus from "@/components/ConnectionStatus";
 
 interface TeamConfig {
-  name: string
-  color: string
-  icon: string
-  logo?: string
-  motto?: string
+  name: string;
+  color: string;
+  icon: string;
+  logo?: string;
+  motto?: string;
 }
 
 interface GameData {
-  team1Config: TeamConfig
-  team2Config: TeamConfig
+  team1Config: TeamConfig;
+  team2Config: TeamConfig;
 }
 
 const getColorClasses = (color: string) => {
@@ -29,9 +38,9 @@ const getColorClasses = (color: string) => {
     pink: { bg: "bg-pink-600" },
     cyan: { bg: "bg-cyan-600" },
     yellow: { bg: "bg-yellow-600" },
-  }
-  return colorMap[color] || colorMap.blue
-}
+  };
+  return colorMap[color] || colorMap.blue;
+};
 
 const getTeamIcon = (iconName: string) => {
   const iconMap: { [key: string]: any } = {
@@ -43,37 +52,37 @@ const getTeamIcon = (iconName: string) => {
     trophy: Trophy,
     target: Target,
     flame: Flame,
-  }
-  return iconMap[iconName] || Crown
-}
+  };
+  return iconMap[iconName] || Crown;
+};
 
 export default function TeamVsPage() {
   const router = useRouter();
-  const [gameData, setGameData] = useState<GameData | null>(null)
-  const [animationComplete, setAnimationComplete] = useState(false)
+  const [gameData, setGameData] = useState<GameData | null>(null);
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
     const loadGameState = () => {
-      const saved = localStorage.getItem("familyFeudGameState")
+      const saved = localStorage.getItem("familyFeudGameState");
       if (saved) {
         try {
-          const parsedData = JSON.parse(saved)
-          setGameData(parsedData)
-          
+          const parsedData = JSON.parse(saved);
+          setGameData(parsedData);
+
           // Start animation sequence after a short delay
           setTimeout(() => {
-            setAnimationComplete(true)
-          }, 500)
+            setAnimationComplete(true);
+          }, 500);
         } catch (error) {
-          console.error("Error parsing game state:", error)
+          console.error("Error parsing game state:", error);
         }
       }
-    }
+    };
 
-    loadGameState()
-    const interval = setInterval(loadGameState, 100)
-    return () => clearInterval(interval)
-  }, [])
+    loadGameState();
+    const interval = setInterval(loadGameState, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const channel = new BroadcastChannel("feud-game-state");
@@ -90,10 +99,13 @@ export default function TeamVsPage() {
       "match-winner": "/states/match-winner",
       "bracket-update": "/states/bracket-update",
       "tournament-winner": "/states/tournament-winner",
+      "grand-winner": "/states/grand-winner",
     };
     channel.onmessage = (event) => {
       const { gameState } = event.data;
-      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      const targetPath =
+        gameStateRoutes[gameState as keyof typeof gameStateRoutes] ||
+        "/states/idle";
       if (window.location.pathname !== targetPath) {
         router.replace(targetPath);
       }
@@ -106,23 +118,27 @@ export default function TeamVsPage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto mb-8"></div>
-          <h1 className="text-4xl md:text-8xl font-bold text-white mb-4 tracking-wider animate-pulse">LOADING...</h1>
+          <h1 className="text-4xl md:text-8xl font-bold text-white mb-4 tracking-wider animate-pulse">
+            LOADING...
+          </h1>
         </div>
       </div>
-    )
+    );
   }
 
-  const team1Colors = getColorClasses(gameData.team1Config.color)
-  const team2Colors = getColorClasses(gameData.team2Config.color)
+  const team1Colors = getColorClasses(gameData.team1Config.color);
+  const team2Colors = getColorClasses(gameData.team2Config.color);
 
   return (
-    <div className="min-h-screen  flex items-center justify-center relative overflow-hidden"
-     style={{
-      backgroundImage: "url('/game-screen.png')",
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-    }}>
+    <div
+      className="min-h-screen  flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: "url('/game-screen.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       {/* Animated background effects */}
       <div className="absolute inset-0">
         {Array.from({ length: 200 }).map((_, i) => (
@@ -146,17 +162,21 @@ export default function TeamVsPage() {
           <AnimatePresence>
             <motion.div
               initial={{ x: -1000, opacity: 0, rotateY: 180 }}
-              animate={animationComplete ? { 
-                x: 0, 
-                opacity: 1, 
-                rotateY: 0,
-                transition: { 
-                  type: "spring", 
-                  stiffness: 50,
-                  damping: 10,
-                  delay: 0.3
-                } 
-              } : {}}
+              animate={
+                animationComplete
+                  ? {
+                      x: 0,
+                      opacity: 1,
+                      rotateY: 0,
+                      transition: {
+                        type: "spring",
+                        stiffness: 50,
+                        damping: 10,
+                        delay: 0.3,
+                      },
+                    }
+                  : {}
+              }
               className="h-auto w-auto origin-center"
               style={{
                 viewTransitionName: "team1-card",
@@ -169,60 +189,72 @@ export default function TeamVsPage() {
                     alt="Team 1 Logo"
                     className="h-[350px] w-[20vw] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
                     initial={{ scale: 0.5, opacity: 0 }}
-                    animate={animationComplete ? { 
-                      scale: 1, 
-                      opacity: 1,
-                      transition: { 
-                        delay: 0.5,
-                        type: "spring",
-                        stiffness: 100
-                      } 
-                    } : {}}
+                    animate={
+                      animationComplete
+                        ? {
+                            scale: 1,
+                            opacity: 1,
+                            transition: {
+                              delay: 0.5,
+                              type: "spring",
+                              stiffness: 100,
+                            },
+                          }
+                        : {}
+                    }
                     style={{
                       viewTransitionName: "team1-logo",
-                      filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))',
+                      filter: "drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))",
                     }}
                   />
                 ) : (
                   <div className="h-[300px] md:h-[400px] lg:h-[500px] w-[300px] md:w-[400px] lg:w-[500px] bg-gray-800 bg-opacity-50 rounded-lg flex items-center justify-center">
-                    <span className="text-4xl font-bold text-white">Team 1</span>
+                    <span className="text-4xl font-bold text-white">
+                      Team 1
+                    </span>
                   </div>
                 )}
-                
+
                 {/* Team Name */}
-                <motion.div 
+                <motion.div
                   className="mt-4"
                   initial={{ y: 50, opacity: 0 }}
-                  animate={animationComplete ? { 
-                    y: 0, 
-                    opacity: 1,
-                    transition: { 
-                      delay: 0.8,
-                      type: "spring"
-                    } 
-                  } : {}}
-                >
-                
-                </motion.div>
+                  animate={
+                    animationComplete
+                      ? {
+                          y: 0,
+                          opacity: 1,
+                          transition: {
+                            delay: 0.8,
+                            type: "spring",
+                          },
+                        }
+                      : {}
+                  }
+                ></motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
 
           {/* VS Symbol */}
           <AnimatePresence>
-            <motion.div 
+            <motion.div
               className="flex items-center justify-center z-10"
               initial={{ scale: 0, opacity: 0 }}
-              animate={animationComplete ? { 
-                scale: 1, 
-                opacity: 1,
-                transition: { 
-                  delay: 0.7,
-                  type: "tween",
-                  duration: 0.8,
-                  ease: [0.68, -0.55, 0.27, 1.55]
-                } 
-              } : {}}
+              animate={
+                animationComplete
+                  ? {
+                      scale: 1,
+                      opacity: 1,
+                      transition: {
+                        delay: 0.7,
+                        type: "tween",
+                        duration: 0.8,
+                        ease: [0.68, -0.55, 0.27, 1.55],
+                      },
+                    }
+                  : {}
+              }
             >
               <motion.div
                 className="h-auto w-[20vw] max-w-[1000px] md:max-w-[1000px] lg:max-w-[1000px] xl:max-w-[1000px]"
@@ -232,10 +264,10 @@ export default function TeamVsPage() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <img 
-                  className="w-full h-auto object-contain" 
-                  src="/vs.png" 
-                  alt="Versus" 
+                <img
+                  className="w-full h-auto object-contain"
+                  src="/vs.png"
+                  alt="Versus"
                 />
               </motion.div>
             </motion.div>
@@ -245,17 +277,21 @@ export default function TeamVsPage() {
           <AnimatePresence>
             <motion.div
               initial={{ x: 1000, opacity: 0, rotateY: -180 }}
-              animate={animationComplete ? { 
-                x: 0, 
-                opacity: 1, 
-                rotateY: 0,
-                transition: { 
-                  type: "spring", 
-                  stiffness: 50,
-                  damping: 10,
-                  delay: 0.3
-                } 
-              } : {}}
+              animate={
+                animationComplete
+                  ? {
+                      x: 0,
+                      opacity: 1,
+                      rotateY: 0,
+                      transition: {
+                        type: "spring",
+                        stiffness: 50,
+                        damping: 10,
+                        delay: 0.3,
+                      },
+                    }
+                  : {}
+              }
               className="h-auto w-auto origin-center"
               style={{
                 viewTransitionName: "team2-card",
@@ -268,49 +304,55 @@ export default function TeamVsPage() {
                     alt="Team 2 Logo"
                     className="h-[350px] w-[20vw] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
                     initial={{ scale: 0.5, opacity: 0 }}
-                    animate={animationComplete ? { 
-                      scale: 1, 
-                      opacity: 1,
-                      transition: { 
-                        delay: 0.5,
-                        type: "spring",
-                        stiffness: 100
-                      } 
-                    } : {}}
+                    animate={
+                      animationComplete
+                        ? {
+                            scale: 1,
+                            opacity: 1,
+                            transition: {
+                              delay: 0.5,
+                              type: "spring",
+                              stiffness: 100,
+                            },
+                          }
+                        : {}
+                    }
                     style={{
                       viewTransitionName: "team2-logo",
-                      filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))',
+                      filter: "drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))",
                     }}
                   />
                 ) : (
                   <div className="h-[300px] md:h-[400px] lg:h-[500px] w-[300px] md:w-[400px] lg:w-[500px] bg-gray-800 bg-opacity-50 rounded-lg flex items-center justify-center">
-                    <span className="text-4xl font-bold text-white">Team 2</span>
+                    <span className="text-4xl font-bold text-white">
+                      Team 2
+                    </span>
                   </div>
                 )}
-                
+
                 {/* Team Name */}
-                <motion.div 
+                <motion.div
                   className="mt-4"
                   initial={{ y: 50, opacity: 0 }}
-                  animate={animationComplete ? { 
-                    y: 0, 
-                    opacity: 1,
-                    transition: { 
-                      delay: 0.8,
-                      type: "spring"
-                    } 
-                  } : {}}
-                >
-                 
-                </motion.div>
+                  animate={
+                    animationComplete
+                      ? {
+                          y: 0,
+                          opacity: 1,
+                          transition: {
+                            delay: 0.8,
+                            type: "spring",
+                          },
+                        }
+                      : {}
+                  }
+                ></motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
         </div>
-
-      
       </div>
       <ConnectionStatus />
     </div>
-  )
+  );
 }

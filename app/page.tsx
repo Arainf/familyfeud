@@ -1,19 +1,30 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useState, useEffect, useRef } from "react"
-import { getPointMultiplier } from "@/lib/game-utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import  SoundControlCard  from "@/components/feud/SoundControlCard"
+import React from "react";
+import { useState, useEffect, useRef } from "react";
+import { getPointMultiplier } from "@/lib/game-utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import SoundControlCard from "@/components/feud/SoundControlCard";
 import {
   uploadImage,
   signUp,
@@ -21,7 +32,7 @@ import {
   getTournaments,
   createTournament as createTournamentDB,
   updateTournament,
-} from "@/lib/supabase"
+} from "@/lib/supabase";
 import {
   X,
   Monitor,
@@ -58,16 +69,16 @@ import {
   Circle,
   CheckCircle,
   ExternalLink,
-} from "lucide-react"
-import AuthDialog from "@/components/feud/AuthDialog"
-import HeaderBar from "@/components/feud/HeaderBar"
-import GameControlsCard from "@/components/feud/GameControlsCard"
-import TeamScoresCard from "@/components/feud/TeamScoresCard"
-import QuestionCard from "@/components/feud/QuestionCard"
-import TournamentManagementCard from "@/components/feud/TournamentManagementCard"
-import QuickActionsCard from "@/components/feud/QuickActionsCard"
-import GameStateNavigationBar from "@/components/feud/GameStateNavigationBar"
-import BracketManagementCard from "@/components/feud/BracketManagementCard"
+} from "lucide-react";
+import AuthDialog from "@/components/feud/AuthDialog";
+import HeaderBar from "@/components/feud/HeaderBar";
+import GameControlsCard from "@/components/feud/GameControlsCard";
+import TeamScoresCard from "@/components/feud/TeamScoresCard";
+import QuestionCard from "@/components/feud/QuestionCard";
+import TournamentManagementCard from "@/components/feud/TournamentManagementCard";
+import QuickActionsCard from "@/components/feud/QuickActionsCard";
+import GameStateNavigationBar from "@/components/feud/GameStateNavigationBar";
+import BracketManagementCard from "@/components/feud/BracketManagementCard";
 
 // Game States for the new flow
 type GameState =
@@ -80,6 +91,7 @@ type GameState =
   | "match-winner"
   | "bracket-update"
   | "tournament-winner"
+  | "grand-winner";
 
 const gameStateNames = {
   idle: "Idle Screen",
@@ -91,7 +103,8 @@ const gameStateNames = {
   "match-winner": "Match Winner",
   "bracket-update": "Bracket Update",
   "tournament-winner": "Tournament Winner",
-}
+  "grand-winner": "Grand Winner",
+};
 
 const gameStateRoutes = {
   idle: "/states/idle",
@@ -103,29 +116,33 @@ const gameStateRoutes = {
   "match-winner": "/states/match-winner",
   "bracket-update": "/states/bracket-update",
   "tournament-winner": "/states/tournament-winner",
-}
+  "grand-winner": "/states/grand-winner",
+};
 
 // Cookie utilities
 const setCookie = (name: string, value: string, days = 7) => {
-  const expires = new Date()
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`
-}
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )};expires=${expires.toUTCString()};path=/`;
+};
 
 const getCookie = (name: string): string | null => {
-  const nameEQ = name + "="
-  const ca = document.cookie.split(";")
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
   for (let i = 0; i < ca.length; i++) {
-    let c = ca[i]
-    while (c.charAt(0) === " ") c = c.substring(1, c.length)
-    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length))
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0)
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
   }
-  return null
-}
+  return null;
+};
 
 const deleteCookie = (name: string) => {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-}
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
 
 // Enhanced game data structure
 const questionCategories = [
@@ -139,13 +156,25 @@ const questionCategories = [
   { id: "work", name: "Work & Career", color: "bg-yellow-500" },
   { id: "travel", name: "Travel", color: "bg-indigo-500" },
   { id: "custom", name: "Custom", color: "bg-gray-500" },
-]
+];
 
 const tournamentModes = [
-  { id: "roundrobin", name: "Round Robin", description: "Every team plays every other team" },
-  { id: "single", name: "Single Elimination", description: "Teams are eliminated after one loss" },
-  { id: "double", name: "Double Elimination", description: "Teams get a second chance in losers bracket" },
-]
+  {
+    id: "roundrobin",
+    name: "Round Robin",
+    description: "Every team plays every other team",
+  },
+  {
+    id: "single",
+    name: "Single Elimination",
+    description: "Teams are eliminated after one loss",
+  },
+  {
+    id: "double",
+    name: "Double Elimination",
+    description: "Teams get a second chance in losers bracket",
+  },
+];
 
 const teamIcons = [
   { name: "Crown", icon: Crown, value: "crown" },
@@ -157,7 +186,7 @@ const teamIcons = [
   { name: "Target", icon: Target, value: "target" },
   { name: "Flame", icon: Flame, value: "flame" },
   { name: "Gamepad", icon: Gamepad2, value: "gamepad" },
-]
+];
 
 const teamColors = [
   { name: "Red", value: "red", hex: "#ef4444" },
@@ -168,14 +197,14 @@ const teamColors = [
   { name: "Pink", value: "pink", hex: "#ec4899" },
   { name: "Cyan", value: "cyan", hex: "#06b6d4" },
   { name: "Yellow", value: "yellow", hex: "#eab308" },
-]
+];
 
 interface UserType {
-  id: string
-  username: string
-  email: string
-  avatar?: string
-  createdAt: string
+  id: string;
+  username: string;
+  email: string;
+  avatar?: string;
+  createdAt: string;
 }
 
 interface TeamConfig {
@@ -194,57 +223,66 @@ interface TeamConfig {
 }
 
 interface MatchQuestion {
-  id: string
-  round: 1 | 2 | 3 | 4 | "tiebreaker"
-  question: string
-  answers: { text: string; points: number }[]
-  category: string
-  difficulty: string
+  id: string;
+  round: 1 | 2 | 3 | 4 | "tiebreaker";
+  question: string;
+  answers: { text: string; points: number }[];
+  category: string;
+  difficulty: string;
 }
 
 interface Match {
-  id: string
-  team1Id: string
-  team2Id: string
-  winnerId?: string
-  score1?: number
-  score2?: number
-  status: "pending" | "in-progress" | "completed"
-  questions: MatchQuestion[]
-  currentRound: 1 | 2 | 3 | 4 | "tiebreaker"
-  currentQuestionIndex: number
-  gameState: GameState
+  id: string;
+  team1Id: string;
+  team2Id: string;
+  winnerId?: string;
+  score1?: number;
+  score2?: number;
+  status: "pending" | "in-progress" | "completed";
+  questions: MatchQuestion[];
+  currentRound: 1 | 2 | 3 | 4 | "tiebreaker";
+  currentQuestionIndex: number;
+  gameState: GameState;
 }
 
 interface Tournament {
-  id: string
-  name: string
-  mode: string
-  teams: TeamConfig[]
-  matches: Match[]
-  status: "setup" | "in-progress" | "completed"
-  createdAt: string
-  currentMatchIndex: number
+  id: string;
+  name: string;
+  mode: string;
+  teams: TeamConfig[];
+  matches: Match[];
+  status: "setup" | "in-progress" | "completed";
+  createdAt: string;
+  currentMatchIndex: number;
 }
 
-const broadcast = typeof window !== "undefined" ? new BroadcastChannel("feud-game-state") : null;
+const broadcast =
+  typeof window !== "undefined"
+    ? new BroadcastChannel("feud-game-state")
+    : null;
 
 export default function FamilyFeudControl() {
   // User management
-  const [user, setUser] = useState<UserType | null>(null)
-  const [showAuthDialog, setShowAuthDialog] = useState(false)
-  const [authMode, setAuthMode] = useState<"login" | "register">("login")
-  const [authForm, setAuthForm] = useState({ username: "", email: "", password: "" })
+  const [user, setUser] = useState<UserType | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authForm, setAuthForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
   // Tournament management
-  const [tournaments, setTournaments] = useState<Tournament[]>([])
-  const [currentTournament, setCurrentTournament] = useState<Tournament | null>(null)
-  const [currentMatch, setCurrentMatch] = useState<Match | null>(null)
-  const [showTournamentDialog, setShowTournamentDialog] = useState(false)
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [currentTournament, setCurrentTournament] = useState<Tournament | null>(
+    null
+  );
+  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
+  const [showTournamentDialog, setShowTournamentDialog] = useState(false);
   const [tournamentForm, setTournamentForm] = useState({
     name: "",
     mode: "roundrobin",
-  })
+  });
   const [tournamentTeams, setTournamentTeams] = useState<TeamConfig[]>([
     {
       name: "SITEAO X LAAO",
@@ -261,7 +299,7 @@ export default function FamilyFeudControl() {
       primaryColor: "#E0445D",
       secondaryColor: "#30AFD9",
       boxImage: "star",
-      motto: "Ready to dominate!",  
+      motto: "Ready to dominate!",
       logo: "/naoxeao.png",
       wins: 0,
       losses: 0,
@@ -276,58 +314,71 @@ export default function FamilyFeudControl() {
       wins: 0,
       losses: 0,
     },
-  ])
+  ]);
 
   // Game state management
-  const [currentGameState, setCurrentGameState] = useState<GameState>("idle")
-  const [currentRound, setCurrentRound] = useState<1 | 2 | 3 | 4 | "tiebreaker">(1)
-  const [team1Score, setTeam1Score] = useState(0)
-  const [team2Score, setTeam2Score] = useState(0)
-  const [roundScore, setRoundScore] = useState(0)
-  const [strikes, setStrikes] = useState(0)
-  const [showScoreAnimation, setShowScoreAnimation] = useState(false)
-  const [animatingScore, setAnimatingScore] = useState(0)
-  const [revealedAnswers, setRevealedAnswers] = useState<boolean[]>([])
-  const [currentTeam, setCurrentTeam] = useState<'team1' | 'team2'>("team1")
-  const [faceOffWinnerTeam, setFaceOffWinnerTeam] = useState<'team1' | 'team2' | null>(null)
-  const [showPlayPass, setShowPlayPass] = useState(false)
+  const [currentGameState, setCurrentGameState] = useState<GameState>("idle");
+  const [currentRound, setCurrentRound] = useState<
+    1 | 2 | 3 | 4 | "tiebreaker"
+  >(1);
+  const [team1Score, setTeam1Score] = useState(0);
+  const [team2Score, setTeam2Score] = useState(0);
+  const [roundScore, setRoundScore] = useState(0);
+  const [strikes, setStrikes] = useState(0);
+  const [showScoreAnimation, setShowScoreAnimation] = useState(false);
+  const [animatingScore, setAnimatingScore] = useState(0);
+  const [revealedAnswers, setRevealedAnswers] = useState<boolean[]>([]);
+  const [currentTeam, setCurrentTeam] = useState<"team1" | "team2">("team1");
+  const [faceOffWinnerTeam, setFaceOffWinnerTeam] = useState<
+    "team1" | "team2" | null
+  >(null);
+  const [showPlayPass, setShowPlayPass] = useState(false);
   const [stealActive, setStealActive] = useState(false);
-  const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
+  const [stealTeam, setStealTeam] = useState<"team1" | "team2">("team2");
 
   // Dialog states
-  const [showTeamCustomization, setShowTeamCustomization] = useState(false)
-  const [showMatchQuestions, setShowMatchQuestions] = useState(false)
-  const [showQuestionDialog, setShowQuestionDialog] = useState(false)
-  const [editingQuestion, setEditingQuestion] = useState<MatchQuestion | null>(null)
-  const [newQuestion, setNewQuestion] = useState("")
-  const [newAnswers, setNewAnswers] = useState([{ text: "", points: 0 }])
-  const [selectedMatchForQuestions, setSelectedMatchForQuestions] = useState<Match | null>(null)
+  const [showTeamCustomization, setShowTeamCustomization] = useState(false);
+  const [showMatchQuestions, setShowMatchQuestions] = useState(false);
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<MatchQuestion | null>(
+    null
+  );
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswers, setNewAnswers] = useState([{ text: "", points: 0 }]);
+  const [selectedMatchForQuestions, setSelectedMatchForQuestions] =
+    useState<Match | null>(null);
 
   // Audio settings
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [gameVolume, setGameVolume] = useState([75])
-  const [micEnabled, setMicEnabled] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [gameVolume, setGameVolume] = useState([75]);
+  const [micEnabled, setMicEnabled] = useState(false);
 
   // Timer
-  const [gameTimer, setGameTimer] = useState(0)
-  const [timerRunning, setTimerRunning] = useState(false)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [gameTimer, setGameTimer] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // File upload
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Sync game state when the current match changes
   useEffect(() => {
     if (currentMatch && currentTournament) {
-      const team1 = currentTournament.teams.find(t => t.name === currentMatch.team1Id)
-      const team2 = currentTournament.teams.find(t => t.name === currentMatch.team2Id)
+      const team1 = currentTournament.teams.find(
+        (t) => t.name === currentMatch.team1Id
+      );
+      const team2 = currentTournament.teams.find(
+        (t) => t.name === currentMatch.team2Id
+      );
 
       if (team1 && team2) {
+
         setRoundScore(0)
         setStrikes(0)
         setRevealedAnswers([])
         setCurrentRound(currentMatch.currentRound || 1)
         setCurrentGameState(currentMatch.gameState || "idle")
+
 
         const team1Config = {
           name: team1.name,
@@ -338,7 +389,7 @@ export default function FamilyFeudControl() {
           motto: team1.motto,
           wins: team1.wins,
           losses: team1.losses,
-        }
+        };
 
         const team2Config = {
           name: team2.name,
@@ -349,7 +400,7 @@ export default function FamilyFeudControl() {
           motto: team2.motto,
           wins: team2.wins,
           losses: team2.losses,
-        }
+        };
 
         const gameState = {
           gameState: currentMatch.gameState || "idle",
@@ -368,7 +419,10 @@ export default function FamilyFeudControl() {
           fastMoneyAnswers: [],
           gameWinner: null,
           tournamentWinner: null,
-          currentQuestion: currentMatch.questions.find(q => q.round === (currentMatch.currentRound || 1)) || null,
+          currentQuestion:
+            currentMatch.questions.find(
+              (q) => q.round === (currentMatch.currentRound || 1)
+            ) || null,
           passOrPlayChoice: null,
           allAnswersRevealed: false,
           roundWinner: null,
@@ -376,14 +430,16 @@ export default function FamilyFeudControl() {
             name: currentTournament.name,
             teams: currentTournament.teams,
             matches: currentTournament.matches,
-            currentMatchIndex: currentTournament.matches.findIndex(m => m.id === currentMatch.id),
+            currentMatchIndex: currentTournament.matches.findIndex(
+              (m) => m.id === currentMatch.id
+            ),
           },
-        }
+        };
 
-        broadcast?.postMessage(gameState)
+        broadcast?.postMessage(gameState);
       }
     }
-  }, [currentMatch, currentTournament])
+  }, [currentMatch, currentTournament]);
 
   // Reset team scores ONLY when the match ID changes (not just round)
   useEffect(() => {
@@ -397,48 +453,51 @@ export default function FamilyFeudControl() {
   useEffect(() => {
     if (timerRunning) {
       timerRef.current = setInterval(() => {
-        setGameTimer((prev) => prev + 1)
-      }, 1000)
+        setGameTimer((prev) => prev + 1);
+      }, 1000);
     } else {
       if (timerRef.current) {
-        clearInterval(timerRef.current)
+        clearInterval(timerRef.current);
       }
     }
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current)
+        clearInterval(timerRef.current);
       }
-    }
-  }, [timerRunning])
+    };
+  }, [timerRunning]);
 
   // Format timer display
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   // Load user data on mount
   useEffect(() => {
-    const savedUser = getCookie("familyFeudUser")
+    const savedUser = getCookie("familyFeudUser");
     if (savedUser) {
-      const userData = JSON.parse(savedUser)
-      setUser(userData)
-      loadUserTournaments(userData.id)
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      loadUserTournaments(userData.id);
     }
-  }, [])
+  }, []);
 
   // Prevent accidental refresh
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = "Are you sure you want to leave? All game progress will be saved."
-      return "Are you sure you want to leave? All game progress will be saved."
-    }
+      e.preventDefault();
+      e.returnValue =
+        "Are you sure you want to leave? All game progress will be saved.";
+      return "Are you sure you want to leave? All game progress will be saved.";
+    };
 
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
-  }, [])
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
 
   // Save game state to localStorage for all pages sync
   useEffect(() => {
@@ -454,31 +513,68 @@ export default function FamilyFeudControl() {
         currentTeam,
         strikes,
         team1Config: {
-          name: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1",
-          color1: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.primaryColor?.replace("#", "") || "red",
-          color2: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.secondaryColor?.replace("#", "") || "red",
-          icon: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.boxImage || "crown",
-          logo: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.logo,
-          motto: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.motto,
-          wins: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.wins || 0,
-          losses: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.losses || 0,
+          name:
+            currentTournament.teams.find((t) => t.name === currentMatch.team1Id)
+              ?.name || "Team 1",
+          color1:
+            currentTournament.teams
+              .find((t) => t.name === currentMatch.team1Id)
+              ?.primaryColor?.replace("#", "") || "red",
+          color2:
+            currentTournament.teams
+              .find((t) => t.name === currentMatch.team1Id)
+              ?.secondaryColor?.replace("#", "") || "red",
+          icon:
+            currentTournament.teams.find((t) => t.name === currentMatch.team1Id)
+              ?.boxImage || "crown",
+          logo: currentTournament.teams.find(
+            (t) => t.name === currentMatch.team1Id
+          )?.logo,
+          motto: currentTournament.teams.find(
+            (t) => t.name === currentMatch.team1Id
+          )?.motto,
+          wins:
+            currentTournament.teams.find((t) => t.name === currentMatch.team1Id)
+              ?.wins || 0,
+          losses:
+            currentTournament.teams.find((t) => t.name === currentMatch.team1Id)
+              ?.losses || 0,
         },
         team2Config: {
-          name: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.name || "Team 2",
-          color1: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.primaryColor?.replace("#", "") || "blue",
-          color2: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.secondaryColor?.replace("#", "") || "blue",
-          icon: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.boxImage || "star",
-          logo: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.logo,
-          motto: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.motto,
-          wins: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.wins || 0,
-          losses: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.losses || 0,
+          name:
+            currentTournament.teams.find((t) => t.name === currentMatch.team2Id)
+              ?.name || "Team 2",
+          color1:
+            currentTournament.teams
+              .find((t) => t.name === currentMatch.team2Id)
+              ?.primaryColor?.replace("#", "") || "blue",
+          color2:
+            currentTournament.teams
+              .find((t) => t.name === currentMatch.team2Id)
+              ?.secondaryColor?.replace("#", "") || "blue",
+          icon:
+            currentTournament.teams.find((t) => t.name === currentMatch.team2Id)
+              ?.boxImage || "star",
+          logo: currentTournament.teams.find(
+            (t) => t.name === currentMatch.team2Id
+          )?.logo,
+          motto: currentTournament.teams.find(
+            (t) => t.name === currentMatch.team2Id
+          )?.motto,
+          wins:
+            currentTournament.teams.find((t) => t.name === currentMatch.team2Id)
+              ?.wins || 0,
+          losses:
+            currentTournament.teams.find((t) => t.name === currentMatch.team2Id)
+              ?.losses || 0,
         },
         showStrikeOverlay: false,
         fastMoneyScore: 0,
         fastMoneyAnswers: [],
         gameWinner: null,
         tournamentWinner: null,
-        currentQuestion: currentMatch.questions.find((q) => q.round === currentRound) || null,
+        currentQuestion:
+          currentMatch.questions.find((q) => q.round === currentRound) || null,
         passOrPlayChoice: null,
         allAnswersRevealed: false,
         roundWinner: null,
@@ -488,12 +584,12 @@ export default function FamilyFeudControl() {
           matches: currentTournament.matches,
           currentMatchIndex: currentTournament.currentMatchIndex,
         },
-      }
+      };
 
       // Save to localStorage for all pages sync
-      localStorage.setItem("familyFeudGameState", JSON.stringify(gameState))
+      localStorage.setItem("familyFeudGameState", JSON.stringify(gameState));
       // Also save to cookies as backup
-      setCookie("familyFeudGameState", JSON.stringify(gameState))
+      setCookie("familyFeudGameState", JSON.stringify(gameState));
     }
   }, [
     currentGameState,
@@ -505,42 +601,46 @@ export default function FamilyFeudControl() {
     currentTournament,
     currentMatch,
     revealedAnswers,
-  ])
+  ]);
 
   // Reset revealedAnswers when the round changes
   useEffect(() => {
-    const currentQ = currentMatch?.questions.find((q) => q.round === currentRound)
+    const currentQ = currentMatch?.questions.find(
+      (q) => q.round === currentRound
+    );
     if (currentQ) {
-      setRevealedAnswers(Array(currentQ.answers.length).fill(false))
+      setRevealedAnswers(Array(currentQ.answers.length).fill(false));
     }
-  }, [currentRound, currentMatch])
+  }, [currentRound, currentMatch]);
 
   // Tournament functions
   const loadUserTournaments = async (userId: string) => {
     try {
-      const { data, error } = await getTournaments(userId)
+      const { data, error } = await getTournaments(userId);
       if (error) {
-        console.error("Error loading tournaments:", error)
-        return
+        console.error("Error loading tournaments:", error);
+        return;
       }
 
       if (data) {
-        setTournaments(data)
+        setTournaments(data);
         if (data.length > 0) {
-          const activeTournament = data.find((t: any) => t.status === "in-progress") || data[0]
-          setCurrentTournament(activeTournament)
+          const activeTournament =
+            data.find((t: any) => t.status === "in-progress") || data[0];
+          setCurrentTournament(activeTournament);
           if (activeTournament.matches && activeTournament.matches.length > 0) {
             const currentMatch =
-              activeTournament.matches[activeTournament.current_match_index] || activeTournament.matches[0]
-            setCurrentMatch(currentMatch)
-            setCurrentGameState(currentMatch.gameState || "idle")
+              activeTournament.matches[activeTournament.current_match_index] ||
+              activeTournament.matches[0];
+            setCurrentMatch(currentMatch);
+            setCurrentGameState(currentMatch.gameState || "idle");
           }
         }
       }
     } catch (error) {
-      console.error("Error loading tournaments:", error)
+      console.error("Error loading tournaments:", error);
     }
-  }
+  };
 
   const handleCreateTournament = async () => {
     // Enforce exactly 3 teams for this bracket
@@ -556,44 +656,44 @@ export default function FamilyFeudControl() {
     const [teamA, teamB, teamC] = tournamentTeams;
     const matches: Match[] = [
       {
-        id: 'match-1',
+        id: "match-1",
         team1Id: teamA.name,
         team2Id: teamB.name,
-        status: 'pending',
+        status: "pending",
         questions: [],
         currentRound: 1,
         currentQuestionIndex: 0,
-        gameState: 'idle',
+        gameState: "idle",
       },
       {
-        id: 'match-2',
-        team1Id: '', // Will be set to Winner of Match 1
+        id: "match-2",
+        team1Id: "", // Will be set to Winner of Match 1
         team2Id: teamC.name,
-        status: 'pending',
+        status: "pending",
         questions: [],
         currentRound: 1,
         currentQuestionIndex: 0,
-        gameState: 'idle',
+        gameState: "idle",
       },
       {
-        id: 'match-3',
-        team1Id: '', // Will be set to Loser of Match 1
-        team2Id: '', // Will be set to Loser of Match 2
-        status: 'pending',
+        id: "match-3",
+        team1Id: "", // Will be set to Loser of Match 1
+        team2Id: "", // Will be set to Loser of Match 2
+        status: "pending",
         questions: [],
         currentRound: 1,
         currentQuestionIndex: 0,
-        gameState: 'idle',
+        gameState: "idle",
       },
     ];
 
     try {
       const { data, error } = await createTournamentDB(user.id, {
         name: tournamentForm.name,
-        mode: 'custom3team',
+        mode: "custom3team",
         teams: tournamentTeams,
         matches,
-        status: 'setup',
+        status: "setup",
         created_at: new Date().toISOString(),
         current_match_index: 0,
       });
@@ -617,10 +717,10 @@ export default function FamilyFeudControl() {
       console.error("Error creating tournament:", error);
       alert("Failed to create tournament");
     }
-  }
+  };
 
   const updateTournamentInStorage = async () => {
-    if (!user || !currentTournament) return
+    if (!user || !currentTournament) return;
 
     try {
       const { error } = await updateTournament(currentTournament.id, {
@@ -628,80 +728,92 @@ export default function FamilyFeudControl() {
         matches: currentTournament.matches,
         current_match_index: currentTournament.currentMatchIndex,
         status: currentTournament.status,
-      })
+      });
 
       if (error) {
-        console.error("Error updating tournament:", error)
+        console.error("Error updating tournament:", error);
       }
     } catch (error) {
-      console.error("Error updating tournament:", error)
+      console.error("Error updating tournament:", error);
     }
-  }
+  };
 
   // Team management
   const addTournamentTeam = () => {
     const newTeam: TeamConfig = {
       name: `Team ${tournamentTeams.length + 1}`,
       primaryColor: teamColors[tournamentTeams.length % teamColors.length].hex,
-      secondaryColor: teamColors[(tournamentTeams.length + 1) % teamColors.length].hex,
+      secondaryColor:
+        teamColors[(tournamentTeams.length + 1) % teamColors.length].hex,
       boxImage: teamIcons[tournamentTeams.length % teamIcons.length].value,
       motto: "Ready to compete!",
       wins: 0,
       losses: 0,
-    }
-    setTournamentTeams([...tournamentTeams, newTeam])
-  }
+    };
+    setTournamentTeams([...tournamentTeams, newTeam]);
+  };
 
   const removeTournamentTeam = (index: number) => {
-    if (tournamentTeams.length <= 2) return
-    setTournamentTeams(tournamentTeams.filter((_, i) => i !== index))
-  }
+    if (tournamentTeams.length <= 2) return;
+    setTournamentTeams(tournamentTeams.filter((_, i) => i !== index));
+  };
 
-  const updateTournamentTeam = (index: number, updates: Partial<TeamConfig>) => {
-    const updatedTeams = tournamentTeams.map((team, i) => (i === index ? { ...team, ...updates } : team))
-    setTournamentTeams(updatedTeams)
+  const updateTournamentTeam = (
+    index: number,
+    updates: Partial<TeamConfig>
+  ) => {
+    const updatedTeams = tournamentTeams.map((team, i) =>
+      i === index ? { ...team, ...updates } : team
+    );
+    setTournamentTeams(updatedTeams);
 
     // If we have a current tournament, update it as well
     if (currentTournament) {
-      const updatedTournament = { ...currentTournament, teams: updatedTeams }
-      setCurrentTournament(updatedTournament)
-      updateTournamentInStorage()
+      const updatedTournament = { ...currentTournament, teams: updatedTeams };
+      setCurrentTournament(updatedTournament);
+      updateTournamentInStorage();
     }
-  }
+  };
 
   // Image upload functions
-  const handleImageUpload = async (file: File, teamIndex: number, type: "icon" | "logo") => {
-    if (!user) return
+  const handleImageUpload = async (
+    file: File,
+    teamIndex: number,
+    type: "icon" | "logo"
+  ) => {
+    if (!user) return;
 
-    setUploadingImage(true)
+    setUploadingImage(true);
     try {
-      const fileName = `${user.id}/${Date.now()}-${file.name}`
-      const { url, error } = await uploadImage(file, "team-assets", fileName)
+      const fileName = `${user.id}/${Date.now()}-${file.name}`;
+      const { url, error } = await uploadImage(file, "team-assets", fileName);
 
       if (error) {
-        console.error("Upload error:", error)
-        alert("Failed to upload image")
-        return
+        console.error("Upload error:", error);
+        alert("Failed to upload image");
+        return;
       }
 
       if (url) {
-        const updates = type === "icon" ? { iconUrl: url } : { logo: url }
-        updateTournamentTeam(teamIndex, updates)
+        const updates = type === "icon" ? { iconUrl: url } : { logo: url };
+        updateTournamentTeam(teamIndex, updates);
       }
     } catch (error) {
-      console.error("Upload error:", error)
-      alert("Failed to upload image")
+      console.error("Upload error:", error);
+      alert("Failed to upload image");
     } finally {
-      setUploadingImage(false)
+      setUploadingImage(false);
     }
-  }
+  };
 
   // Question management
   const createMatchQuestions = (matchId: string) => {
-    if (!currentTournament) return
+    if (!currentTournament) return;
 
-    const matchIndex = currentTournament.matches.findIndex((m) => m.id === matchId)
-    if (matchIndex === -1) return
+    const matchIndex = currentTournament.matches.findIndex(
+      (m) => m.id === matchId
+    );
+    if (matchIndex === -1) return;
 
     // Create 5 questions for the match (one for each round + tiebreaker)
     const questions: MatchQuestion[] = [
@@ -745,100 +857,118 @@ export default function FamilyFeudControl() {
         category: "general",
         difficulty: "hard",
       },
-    ]
+    ];
 
     // Update the tournament with new questions
-    const updatedTournament = { ...currentTournament }
-    updatedTournament.matches[matchIndex].questions = questions
-    setCurrentTournament(updatedTournament)
-    updateTournamentInStorage()
-  }
+    const updatedTournament = { ...currentTournament };
+    updatedTournament.matches[matchIndex].questions = questions;
+    setCurrentTournament(updatedTournament);
+    updateTournamentInStorage();
+  };
 
   // Game state management
   const changeGameState = (newState: GameState) => {
-    setCurrentGameState(newState)
+    setCurrentGameState(newState);
     if (currentMatch && currentTournament) {
-      const matchIndex = currentTournament.matches.findIndex((m) => m.id === currentMatch.id)
+      const matchIndex = currentTournament.matches.findIndex(
+        (m) => m.id === currentMatch.id
+      );
       if (matchIndex !== -1) {
-        const updatedTournament = { ...currentTournament }
-        updatedTournament.matches[matchIndex].gameState = newState
-        setCurrentTournament(updatedTournament)
-        updateTournamentInStorage()
+        const updatedTournament = { ...currentTournament };
+        updatedTournament.matches[matchIndex].gameState = newState;
+        setCurrentTournament(updatedTournament);
+        updateTournamentInStorage();
       }
     }
     // Broadcast the new state to all viewers
     if (broadcast) {
-      broadcast.postMessage({ gameState: newState })
+      broadcast.postMessage({ gameState: newState });
     }
-  }
+  };
 
   const nextRound = () => {
-    if (currentRound === "tiebreaker") return
+    if (currentRound === "tiebreaker") return;
 
-    const nextRoundMap = { 1: 2, 2: 3, 3: 4, 4: "tiebreaker" } as const
-    const newRound = nextRoundMap[currentRound as keyof typeof nextRoundMap]
-    setCurrentRound(newRound)
+    const nextRoundMap = { 1: 2, 2: 3, 3: 4, 4: "tiebreaker" } as const;
+    const newRound = nextRoundMap[currentRound as keyof typeof nextRoundMap];
+    setCurrentRound(newRound);
 
     if (currentMatch && currentTournament) {
-      const matchIndex = currentTournament.matches.findIndex((m) => m.id === currentMatch.id)
+      const matchIndex = currentTournament.matches.findIndex(
+        (m) => m.id === currentMatch.id
+      );
       if (matchIndex !== -1) {
-        const updatedTournament = { ...currentTournament }
-        updatedTournament.matches[matchIndex].currentRound = newRound
-        setCurrentTournament(updatedTournament)
-        updateTournamentInStorage()
+        const updatedTournament = { ...currentTournament };
+        updatedTournament.matches[matchIndex].currentRound = newRound;
+        setCurrentTournament(updatedTournament);
+        updateTournamentInStorage();
       }
     }
     // Reset Answers Reveal state if round was marked done
-    if (localStorage.getItem('roundDone') === 'true') {
-      localStorage.setItem('showAllAnswers', 'false');
-      localStorage.setItem('roundDone', 'false');
+    if (localStorage.getItem("roundDone") === "true") {
+      localStorage.setItem("showAllAnswers", "false");
+      localStorage.setItem("roundDone", "false");
     }
-  }
+  };
 
   const awardPoints = () => {
-  setShowScoreAnimation(true);
-  setAnimatingScore(roundScore);
-  // Import getPointMultiplier at the top if not already
-  // import { getPointMultiplier } from "@/lib/game-utils";
-  const multiplier = getPointMultiplier(currentRound);
-  const pointsToAdd = roundScore * multiplier;
-  setTimeout(() => {
-    if (currentTeam === 'team1') {
-      setTeam1Score((prev) => prev + pointsToAdd);
-    } else {
-      setTeam2Score((prev) => prev + pointsToAdd);
-    }
-    setRoundScore(0);
-    setShowScoreAnimation(false);
+    setShowScoreAnimation(true);
+    setAnimatingScore(roundScore);
+    // Import getPointMultiplier at the top if not already
+    // import { getPointMultiplier } from "@/lib/game-utils";
+    const multiplier = getPointMultiplier(currentRound);
+    const pointsToAdd = roundScore * multiplier;
+    setTimeout(() => {
+      if (currentTeam === "team1") {
+        setTeam1Score((prev) => prev + pointsToAdd);
+      } else {
+        setTeam2Score((prev) => prev + pointsToAdd);
+      }
+      setRoundScore(0);
+      setShowScoreAnimation(false);
 
-    // After round 4, check for tie and trigger tiebreaker if needed
-    if (currentRound === 4) {
-      setTimeout(() => {
-        // Use the most up-to-date scores
-        let t1 = 0, t2 = 0;
-        setTeam1Score((prev1) => { t1 = prev1; return prev1; });
-        setTeam2Score((prev2) => { t2 = prev2; return prev2; });
+      // After round 4, check for tie and trigger tiebreaker if needed
+      if (currentRound === 4) {
         setTimeout(() => {
-          if (t1 === t2) {
-            setCurrentRound('tiebreaker');
-            // Optionally update match/tournament state here
-          }
-        }, 100); // Give React state a moment to flush
-      }, 300);
-    }
-  }, 2000);
-}
-
+          // Use the most up-to-date scores
+          let t1 = 0,
+            t2 = 0;
+          setTeam1Score((prev1) => {
+            t1 = prev1;
+            return prev1;
+          });
+          setTeam2Score((prev2) => {
+            t2 = prev2;
+            return prev2;
+          });
+          setTimeout(() => {
+            if (t1 === t2) {
+              setCurrentRound("tiebreaker");
+              // Optionally update match/tournament state here
+            }
+          }, 100); // Give React state a moment to flush
+        }, 300);
+      }
+    }, 2000);
+  };
 
   // User management functions
   const handleAuth = async () => {
     if (authMode === "register") {
       try {
-        const { data, error } = await signUp(authForm.email, authForm.password, authForm.username)
+        const { data, error } = await signUp(
+          authForm.email,
+          authForm.password,
+          authForm.username
+        );
 
         if (error) {
-          alert(typeof error === "object" && error !== null && "message" in error ? (error as any).message : "Registration failed")
-          return
+          alert(
+            typeof error === "object" && error !== null && "message" in error
+              ? (error as any).message
+              : "Registration failed"
+          );
+          return;
         }
 
         if (data) {
@@ -847,22 +977,26 @@ export default function FamilyFeudControl() {
             username: data.username,
             email: data.email,
             createdAt: data.created_at,
-          }
-          setUser(newUser)
-          setCookie("familyFeudUser", JSON.stringify(newUser))
-          loadUserTournaments(newUser.id)
+          };
+          setUser(newUser);
+          setCookie("familyFeudUser", JSON.stringify(newUser));
+          loadUserTournaments(newUser.id);
         }
       } catch (error) {
-        console.error("Registration error:", error)
-        alert("Registration failed")
+        console.error("Registration error:", error);
+        alert("Registration failed");
       }
     } else {
       try {
-        const { data, error } = await signIn(authForm.email, authForm.password)
+        const { data, error } = await signIn(authForm.email, authForm.password);
 
         if (error) {
-          alert(typeof error === "object" && error !== null && "message" in error ? (error as any).message : "Login failed")
-          return
+          alert(
+            typeof error === "object" && error !== null && "message" in error
+              ? (error as any).message
+              : "Login failed"
+          );
+          return;
         }
 
         if (data) {
@@ -871,48 +1005,52 @@ export default function FamilyFeudControl() {
             username: data.username,
             email: data.email,
             createdAt: data.created_at,
-          }
-          setUser(userData)
-          setCookie("familyFeudUser", JSON.stringify(userData))
-          loadUserTournaments(userData.id)
+          };
+          setUser(userData);
+          setCookie("familyFeudUser", JSON.stringify(userData));
+          loadUserTournaments(userData.id);
         }
       } catch (error) {
-        console.error("Login error:", error)
-        alert("Login failed")
+        console.error("Login error:", error);
+        alert("Login failed");
       }
     }
-    setShowAuthDialog(false)
-    setAuthForm({ username: "", email: "", password: "" })
-  }
+    setShowAuthDialog(false);
+    setAuthForm({ username: "", email: "", password: "" });
+  };
 
   const handleLogout = async () => {
-    setUser(null)
-    deleteCookie("familyFeudUser")
-    setTournaments([])
-    setCurrentTournament(null)
-    setCurrentMatch(null)
-  }
+    setUser(null);
+    deleteCookie("familyFeudUser");
+    setTournaments([]);
+    setCurrentTournament(null);
+    setCurrentMatch(null);
+  };
 
   // Get team icon component
   const getTeamIcon = (iconName: string) => {
-    return teamIcons.find((i) => i.value === iconName)?.icon || Crown
-  }
+    return teamIcons.find((i) => i.value === iconName)?.icon || Crown;
+  };
 
   // Update question in tournament
   const updateQuestionInTournament = (
     matchId: string,
     round: 1 | 2 | 3 | 4 | "tiebreaker",
     field: "question" | "answers",
-    value: any,
+    value: any
   ) => {
-    if (!currentTournament) return
+    if (!currentTournament) return;
 
-    const updatedTournament = { ...currentTournament }
-    const matchIndex = updatedTournament.matches.findIndex((m) => m.id === matchId)
+    const updatedTournament = { ...currentTournament };
+    const matchIndex = updatedTournament.matches.findIndex(
+      (m) => m.id === matchId
+    );
 
-    if (matchIndex === -1) return
+    if (matchIndex === -1) return;
 
-    let questionIndex = updatedTournament.matches[matchIndex].questions.findIndex((q) => q.round === round)
+    let questionIndex = updatedTournament.matches[
+      matchIndex
+    ].questions.findIndex((q) => q.round === round);
 
     // If question doesn't exist, create it
     if (questionIndex === -1) {
@@ -923,35 +1061,38 @@ export default function FamilyFeudControl() {
         answers: [{ text: "", points: 0 }],
         category: "general",
         difficulty: "medium",
-      })
-      questionIndex = updatedTournament.matches[matchIndex].questions.length - 1
+      });
+      questionIndex =
+        updatedTournament.matches[matchIndex].questions.length - 1;
     }
 
     // Update the field
     if (field === "question") {
-      updatedTournament.matches[matchIndex].questions[questionIndex].question = value
+      updatedTournament.matches[matchIndex].questions[questionIndex].question =
+        value;
     } else if (field === "answers") {
-      updatedTournament.matches[matchIndex].questions[questionIndex].answers = value
+      updatedTournament.matches[matchIndex].questions[questionIndex].answers =
+        value;
     }
 
-    setCurrentTournament(updatedTournament)
-    setSelectedMatchForQuestions(updatedTournament.matches[matchIndex])
-    updateTournamentInStorage()
-  }
+    setCurrentTournament(updatedTournament);
+    setSelectedMatchForQuestions(updatedTournament.matches[matchIndex]);
+    updateTournamentInStorage();
+  };
 
   // Reveal answer function
   const revealAnswer = (answerIndex: number) => {
-    const newRevealedAnswers = [...revealedAnswers]
-    newRevealedAnswers[answerIndex] = true
-    setRevealedAnswers(newRevealedAnswers)
-  }
+    const newRevealedAnswers = [...revealedAnswers];
+    newRevealedAnswers[answerIndex] = true;
+    setRevealedAnswers(newRevealedAnswers);
+  };
 
   // Handler for strike logic
   const handleStrike = () => {
     setStrikes((prev) => {
       const newStrikes = Math.min(3, prev + 1);
-    
-        localStorage.setItem('showStrikeOverlay', 'true');
+
+      localStorage.setItem("showStrikeOverlay", "true");
 
       return newStrikes;
     });
@@ -974,7 +1115,7 @@ export default function FamilyFeudControl() {
   //       }
   //       setRoundScore(0);
   //       setStrikes(0);
-  
+
   //     }
   //   };
   //   window.addEventListener('storage', handleStorage);
@@ -991,7 +1132,7 @@ export default function FamilyFeudControl() {
         setAuthForm={setAuthForm}
         handleAuth={handleAuth}
       />
-    )
+    );
   }
 
   return (
@@ -1033,11 +1174,14 @@ export default function FamilyFeudControl() {
             team2Score={team2Score}
             currentTeam={currentTeam}
             onStrike={handleStrike}
-            onResetStrikes={() => { setStrikes(0); localStorage.setItem('showStrikeOverlay', 'false'); }}
+            onResetStrikes={() => {
+              setStrikes(0);
+              localStorage.setItem("showStrikeOverlay", "false");
+            }}
           />
 
           {/* Team Scores */}
-        
+
           <TeamScoresCard
             team1Name={currentMatch ? currentTournament?.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1" : "Team 1"}
             team2Name={currentMatch ? currentTournament?.teams.find(t => t.name === currentMatch.team2Id)?.name || "Team 2" : "Team 2"}
@@ -1049,50 +1193,60 @@ export default function FamilyFeudControl() {
             currentTeam={currentTeam}
             showPlayPass={showPlayPass}
             onPlay={() => {
-              setShowPlayPass(false)
-              setCurrentGameState('game-play')
-              localStorage.setItem('passOrPlayChoice', 'play')
-              localStorage.setItem('showPassOrPlayOverlay', 'false')
+              setShowPlayPass(false);
+              setCurrentGameState("game-play");
+              localStorage.setItem("passOrPlayChoice", "play");
+              localStorage.setItem("showPassOrPlayOverlay", "false");
             }}
             onPass={() => {
-              setShowPlayPass(false)
-              setCurrentTeam(currentTeam === 'team1' ? 'team2' : 'team1')
-              setCurrentGameState('game-play')
-              localStorage.setItem('passOrPlayChoice', 'pass')
-              localStorage.setItem('showPassOrPlayOverlay', 'false')
+              setShowPlayPass(false);
+              setCurrentTeam(currentTeam === "team1" ? "team2" : "team1");
+              setCurrentGameState("game-play");
+              localStorage.setItem("passOrPlayChoice", "pass");
+              localStorage.setItem("showPassOrPlayOverlay", "false");
             }}
             onSwitchTeam={() => {
               setCurrentTeam((prev) => {
-                const newTeam = prev === 'team1' ? 'team2' : 'team1';
-                localStorage.setItem('currentTeam', newTeam);
+                const newTeam = prev === "team1" ? "team2" : "team1";
+                localStorage.setItem("currentTeam", newTeam);
                 return newTeam;
               });
             }}
-            
             onActivatePassOrPlay={() => {
-              setShowPlayPass(true)
-              localStorage.setItem('showPassOrPlayOverlay', 'true')
+              setShowPlayPass(true);
+              localStorage.setItem("showPassOrPlayOverlay", "true");
             }}
           />
-        
+
           {/* Question Card */}
           <QuestionCard
-            question={currentMatch?.questions.find((q) => q.round === currentRound)?.question || "No question set."}
-            answers={currentMatch?.questions.find((q) => q.round === currentRound)?.answers || []}
+            question={
+              currentMatch?.questions.find((q) => q.round === currentRound)
+                ?.question || "No question set."
+            }
+            answers={
+              currentMatch?.questions.find((q) => q.round === currentRound)
+                ?.answers || []
+            }
             revealedAnswers={revealedAnswers}
-            onReveal={(idx) => {   // Only reveal the answer, do not add points
-              revealAnswer(idx)
+            onReveal={(idx) => {
+              // Only reveal the answer, do not add points
+              revealAnswer(idx);
             }}
             onAwardPoints={(idx) => {
               // Add points to the round pool only when this is called
-              const answer = currentMatch?.questions.find((q) => q.round === currentRound)?.answers[idx]
+              const answer = currentMatch?.questions.find(
+                (q) => q.round === currentRound
+              )?.answers[idx];
               if (answer) {
-                setRoundScore((prev) => prev + answer.points)
+                setRoundScore((prev) => prev + answer.points);
               }
             }}
-            currentTeam={currentTeam === "team1"
-              ? currentTournament?.teams[0]?.name || "Team 1"
-              : currentTournament?.teams[1]?.name || "Team 2"}
+            currentTeam={
+              currentTeam === "team1"
+                ? currentTournament?.teams[0]?.name || "Team 1"
+                : currentTournament?.teams[1]?.name || "Team 2"
+            }
           />
 
           {/* Tournament Management */}
@@ -1108,7 +1262,10 @@ export default function FamilyFeudControl() {
               const updatedMatches = currentTournament.matches.map((m) =>
                 m.id === matchId ? { ...m, status: "completed" as const } : m
               );
-              setCurrentTournament({ ...currentTournament, matches: updatedMatches });
+              setCurrentTournament({
+                ...currentTournament,
+                matches: updatedMatches,
+              });
               // Optionally update bracket logic here
             }}
           />
@@ -1121,7 +1278,9 @@ export default function FamilyFeudControl() {
             currentGameState={currentGameState}
             gameStateRoutes={gameStateRoutes}
             changeGameState={(state) => changeGameState(state as GameState)}
-            onRoundStart={() => { window.location.href = '/states/game-play' }}
+            onRoundStart={() => {
+              window.location.href = "/states/game-play";
+            }}
           />
         </div>
 
@@ -1136,17 +1295,26 @@ export default function FamilyFeudControl() {
 
       {/* All the existing dialogs remain the same... */}
       {/* Tournament Creation Dialog */}
-      <Dialog open={showTournamentDialog} onOpenChange={setShowTournamentDialog}>
+      <Dialog
+        open={showTournamentDialog}
+        onOpenChange={setShowTournamentDialog}
+      >
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-4xl">
           <DialogHeader>
             <DialogTitle>Create New Tournament</DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="setup">
             <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-              <TabsTrigger value="setup" className="data-[state=active]:bg-blue-600">
+              <TabsTrigger
+                value="setup"
+                className="data-[state=active]:bg-blue-600"
+              >
                 Tournament Setup
               </TabsTrigger>
-              <TabsTrigger value="teams" className="data-[state=active]:bg-blue-600">
+              <TabsTrigger
+                value="teams"
+                className="data-[state=active]:bg-blue-600"
+              >
                 Teams ({tournamentTeams.length})
               </TabsTrigger>
             </TabsList>
@@ -1156,7 +1324,12 @@ export default function FamilyFeudControl() {
                 <Label className="text-gray-300">Tournament Name</Label>
                 <Input
                   value={tournamentForm.name}
-                  onChange={(e) => setTournamentForm((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setTournamentForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
                   placeholder="Enter tournament name"
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -1166,17 +1339,25 @@ export default function FamilyFeudControl() {
                 <Label className="text-gray-300">Tournament Mode</Label>
                 <Select
                   value={tournamentForm.mode}
-                  onValueChange={(value) => setTournamentForm((prev) => ({ ...prev, mode: value }))}
+                  onValueChange={(value) =>
+                    setTournamentForm((prev) => ({ ...prev, mode: value }))
+                  }
                 >
                   <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
                     {tournamentModes.map((mode) => (
-                      <SelectItem key={mode.id} value={mode.id} className="text-white hover:bg-gray-700">
+                      <SelectItem
+                        key={mode.id}
+                        value={mode.id}
+                        className="text-white hover:bg-gray-700"
+                      >
                         <div>
                           <div className="font-medium">{mode.name}</div>
-                          <div className="text-sm text-gray-400">{mode.description}</div>
+                          <div className="text-sm text-gray-400">
+                            {mode.description}
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
@@ -1188,7 +1369,11 @@ export default function FamilyFeudControl() {
             <TabsContent value="teams" className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-white">Tournament Teams</h4>
-                <Button size="sm" onClick={addTournamentTeam} className="bg-blue-600 hover:bg-blue-700">
+                <Button
+                  size="sm"
+                  onClick={addTournamentTeam}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Team
                 </Button>
@@ -1206,14 +1391,25 @@ export default function FamilyFeudControl() {
                           }}
                         >
                           {team.iconUrl ? (
-                            <img src={team.iconUrl || "/placeholder.svg"} alt="Team Icon" className="w-6 h-6 rounded" />
+                            <img
+                              src={team.iconUrl || "/placeholder.svg"}
+                              alt="Team Icon"
+                              className="w-6 h-6 rounded"
+                            />
                           ) : (
-                            React.createElement(getTeamIcon(team.icon || 'Shield'), { className: "w-5 h-5 text-white" })
+                            React.createElement(
+                              getTeamIcon(team.icon || "Shield"),
+                              { className: "w-5 h-5 text-white" }
+                            )
                           )}
                         </div>
                         <Input
                           value={team.name}
-                          onChange={(e) => updateTournamentTeam(index, { name: e.target.value })}
+                          onChange={(e) =>
+                            updateTournamentTeam(index, {
+                              name: e.target.value,
+                            })
+                          }
                           className="flex-1 bg-gray-700 border-gray-600 text-white"
                         />
                         <Button
@@ -1229,30 +1425,48 @@ export default function FamilyFeudControl() {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-gray-400 text-xs">Primary Color</Label>
+                          <Label className="text-gray-400 text-xs">
+                            Primary Color
+                          </Label>
                           <Input
                             type="color"
                             value={team.primaryColor}
-                            onChange={(e) => updateTournamentTeam(index, { primaryColor: e.target.value })}
+                            onChange={(e) =>
+                              updateTournamentTeam(index, {
+                                primaryColor: e.target.value,
+                              })
+                            }
                             className="h-8 bg-gray-700 border-gray-600"
                           />
                         </div>
                         <div>
-                          <Label className="text-gray-400 text-xs">Secondary Color</Label>
+                          <Label className="text-gray-400 text-xs">
+                            Secondary Color
+                          </Label>
                           <Input
                             type="color"
                             value={team.secondaryColor}
-                            onChange={(e) => updateTournamentTeam(index, { secondaryColor: e.target.value })}
+                            onChange={(e) =>
+                              updateTournamentTeam(index, {
+                                secondaryColor: e.target.value,
+                              })
+                            }
                             className="h-8 bg-gray-700 border-gray-600"
                           />
                         </div>
                       </div>
 
                       <div className="mt-3">
-                        <Label className="text-gray-400 text-xs">Team Motto</Label>
+                        <Label className="text-gray-400 text-xs">
+                          Team Motto
+                        </Label>
                         <Input
                           value={team.motto || ""}
-                          onChange={(e) => updateTournamentTeam(index, { motto: e.target.value })}
+                          onChange={(e) =>
+                            updateTournamentTeam(index, {
+                              motto: e.target.value,
+                            })
+                          }
                           placeholder="Enter team motto"
                           className="bg-gray-700 border-gray-600 text-white"
                         />
@@ -1263,14 +1477,15 @@ export default function FamilyFeudControl() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const input = document.createElement("input")
-                            input.type = "file"
-                            input.accept = "image/*"
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
                             input.onchange = (e) => {
-                              const file = (e.target as HTMLInputElement).files?.[0]
-                              if (file) handleImageUpload(file, index, "icon")
-                            }
-                            input.click()
+                              const file = (e.target as HTMLInputElement)
+                                .files?.[0];
+                              if (file) handleImageUpload(file, index, "icon");
+                            };
+                            input.click();
                           }}
                           disabled={uploadingImage}
                           className="border-gray-700 text-white hover:bg-gray-800"
@@ -1282,14 +1497,15 @@ export default function FamilyFeudControl() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            const input = document.createElement("input")
-                            input.type = "file"
-                            input.accept = "image/*"
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
                             input.onchange = (e) => {
-                              const file = (e.target as HTMLInputElement).files?.[0]
-                              if (file) handleImageUpload(file, index, "logo")
-                            }
-                            input.click()
+                              const file = (e.target as HTMLInputElement)
+                                .files?.[0];
+                              if (file) handleImageUpload(file, index, "logo");
+                            };
+                            input.click();
                           }}
                           disabled={uploadingImage}
                           className="border-gray-700 text-white hover:bg-gray-800"
@@ -1307,7 +1523,9 @@ export default function FamilyFeudControl() {
                 <Button
                   onClick={handleCreateTournament}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  disabled={tournamentTeams.length < 2 || !tournamentForm.name.trim()}
+                  disabled={
+                    tournamentTeams.length < 2 || !tournamentForm.name.trim()
+                  }
                 >
                   <Trophy className="w-4 h-4 mr-2" />
                   Create Tournament
@@ -1326,7 +1544,10 @@ export default function FamilyFeudControl() {
       </Dialog>
 
       {/* Team Customization Dialog */}
-      <Dialog open={showTeamCustomization} onOpenChange={setShowTeamCustomization}>
+      <Dialog
+        open={showTeamCustomization}
+        onOpenChange={setShowTeamCustomization}
+      >
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-4xl">
           <DialogHeader>
             <DialogTitle>Team Customization</DialogTitle>
@@ -1334,14 +1555,18 @@ export default function FamilyFeudControl() {
           <div className="space-y-6">
             {tournamentTeams.map((team, index) => (
               <div key={index} className="p-4 bg-gray-800 rounded-lg">
-                <h3 className="text-lg font-semibold text-white mb-4">Team {index + 1}</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Team {index + 1}
+                </h3>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
                       <Label className="text-gray-300">Team Name</Label>
                       <Input
                         value={team.name}
-                        onChange={(e) => updateTournamentTeam(index, { name: e.target.value })}
+                        onChange={(e) =>
+                          updateTournamentTeam(index, { name: e.target.value })
+                        }
                         className="bg-gray-700 border-gray-600 text-white"
                       />
                     </div>
@@ -1350,7 +1575,9 @@ export default function FamilyFeudControl() {
                       <Label className="text-gray-300">Team Motto</Label>
                       <Input
                         value={team.motto || ""}
-                        onChange={(e) => updateTournamentTeam(index, { motto: e.target.value })}
+                        onChange={(e) =>
+                          updateTournamentTeam(index, { motto: e.target.value })
+                        }
                         placeholder="Enter team motto"
                         className="bg-gray-700 border-gray-600 text-white"
                       />
@@ -1362,7 +1589,11 @@ export default function FamilyFeudControl() {
                         <Input
                           type="color"
                           value={team.primaryColor}
-                          onChange={(e) => updateTournamentTeam(index, { primaryColor: e.target.value })}
+                          onChange={(e) =>
+                            updateTournamentTeam(index, {
+                              primaryColor: e.target.value,
+                            })
+                          }
                           className="h-10 bg-gray-700 border-gray-600"
                         />
                       </div>
@@ -1371,7 +1602,11 @@ export default function FamilyFeudControl() {
                         <Input
                           type="color"
                           value={team.secondaryColor}
-                          onChange={(e) => updateTournamentTeam(index, { secondaryColor: e.target.value })}
+                          onChange={(e) =>
+                            updateTournamentTeam(index, {
+                              secondaryColor: e.target.value,
+                            })
+                          }
                           className="h-10 bg-gray-700 border-gray-600"
                         />
                       </div>
@@ -1381,14 +1616,15 @@ export default function FamilyFeudControl() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const input = document.createElement("input")
-                          input.type = "file"
-                          input.accept = "image/*"
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "image/*";
                           input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0]
-                            if (file) handleImageUpload(file, index, "icon")
-                          }
-                          input.click()
+                            const file = (e.target as HTMLInputElement)
+                              .files?.[0];
+                            if (file) handleImageUpload(file, index, "icon");
+                          };
+                          input.click();
                         }}
                         disabled={uploadingImage}
                         className="border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
@@ -1399,14 +1635,15 @@ export default function FamilyFeudControl() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const input = document.createElement("input")
-                          input.type = "file"
-                          input.accept = "image/*"
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "image/*";
                           input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0]
-                            if (file) handleImageUpload(file, index, "logo")
-                          }
-                          input.click()
+                            const file = (e.target as HTMLInputElement)
+                              .files?.[0];
+                            if (file) handleImageUpload(file, index, "logo");
+                          };
+                          input.click();
                         }}
                         disabled={uploadingImage}
                         className="border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
@@ -1428,16 +1665,31 @@ export default function FamilyFeudControl() {
                       >
                         <div className="flex items-center justify-center gap-3 mb-3">
                           {team.iconUrl ? (
-                            <img src={team.iconUrl || "/placeholder.svg"} alt="Team Icon" className="w-8 h-8 rounded" />
+                            <img
+                              src={team.iconUrl || "/placeholder.svg"}
+                              alt="Team Icon"
+                              className="w-8 h-8 rounded"
+                            />
                           ) : (
-                            React.createElement(getTeamIcon(team.icon || 'Shield'), { className: "w-8 h-8 text-white" })
+                            React.createElement(
+                              getTeamIcon(team.icon || "Shield"),
+                              { className: "w-8 h-8 text-white" }
+                            )
                           )}
                           {team.logo && (
-                            <img src={team.logo || "/placeholder.svg"} alt="Team Logo" className="w-8 h-8 rounded" />
+                            <img
+                              src={team.logo || "/placeholder.svg"}
+                              alt="Team Logo"
+                              className="w-8 h-8 rounded"
+                            />
                           )}
                         </div>
                         <h4 className="text-xl font-bold">{team.name}</h4>
-                        {team.motto && <p className="text-sm opacity-90 mt-1">"{team.motto}"</p>}
+                        {team.motto && (
+                          <p className="text-sm opacity-90 mt-1">
+                            "{team.motto}"
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1465,24 +1717,32 @@ export default function FamilyFeudControl() {
                     size="sm"
                     onClick={() => {
                       if (match.questions.length === 0) {
-                        createMatchQuestions(match.id)
+                        createMatchQuestions(match.id);
                       }
-                      setSelectedMatchForQuestions(match)
-                      setShowQuestionDialog(true)
+                      setSelectedMatchForQuestions(match);
+                      setShowQuestionDialog(true);
                     }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    {match.questions.length === 0 ? "Create Questions" : "Edit Questions"}
+                    {match.questions.length === 0
+                      ? "Create Questions"
+                      : "Edit Questions"}
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, "tiebreaker"].map((round) => (
-                    <div key={round} className="p-3 bg-gray-700 rounded-lg text-center">
-                      <div className="text-sm text-gray-400 mb-1">Round {round}</div>
+                    <div
+                      key={round}
+                      className="p-3 bg-gray-700 rounded-lg text-center"
+                    >
+                      <div className="text-sm text-gray-400 mb-1">
+                        Round {round}
+                      </div>
                       <div className="text-xs text-gray-500">
-                        {match.questions.find((q) => q.round === round)?.question ? (
+                        {match.questions.find((q) => q.round === round)
+                          ?.question ? (
                           <CheckCircle className="w-4 h-4 text-green-400 mx-auto" />
                         ) : (
                           <Circle className="w-4 h-4 text-gray-600 mx-auto" />
@@ -1502,7 +1762,9 @@ export default function FamilyFeudControl() {
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-4xl">
           <DialogHeader>
             <DialogTitle>
-              {editingQuestion ? `Edit Question - Round ${editingQuestion.round}` : "Create Questions"}
+              {editingQuestion
+                ? `Edit Question - Round ${editingQuestion.round}`
+                : "Create Questions"}
             </DialogTitle>
           </DialogHeader>
 
@@ -1510,34 +1772,47 @@ export default function FamilyFeudControl() {
             <div className="space-y-6">
               <div className="text-center p-4 bg-gray-800 rounded-lg">
                 <h3 className="text-lg font-semibold text-white">
-                  {selectedMatchForQuestions.team1Id} vs {selectedMatchForQuestions.team2Id}
+                  {selectedMatchForQuestions.team1Id} vs{" "}
+                  {selectedMatchForQuestions.team2Id}
                 </h3>
               </div>
 
               <Tabs defaultValue="1">
                 <TabsList className="grid w-full grid-cols-5 bg-gray-800">
                   {[1, 2, 3, 4, "tiebreaker"].map((round) => (
-                    <TabsTrigger key={round} value={round.toString()} className="data-[state=active]:bg-blue-600">
+                    <TabsTrigger
+                      key={round}
+                      value={round.toString()}
+                      className="data-[state=active]:bg-blue-600"
+                    >
                       Round {round}
                     </TabsTrigger>
                   ))}
                 </TabsList>
 
                 {[1, 2, 3, 4, "tiebreaker"].map((round) => (
-                  <TabsContent key={round} value={round.toString()} className="space-y-4">
+                  <TabsContent
+                    key={round}
+                    value={round.toString()}
+                    className="space-y-4"
+                  >
                     <div className="p-4 bg-gray-800 rounded-lg">
                       <div className="space-y-4">
                         <div>
                           <Label className="text-gray-300">Question</Label>
                           <Textarea
-                            value={selectedMatchForQuestions.questions.find((q) => q.round === round)?.question || ""}
+                            value={
+                              selectedMatchForQuestions.questions.find(
+                                (q) => q.round === round
+                              )?.question || ""
+                            }
                             onChange={(e) => {
                               updateQuestionInTournament(
                                 selectedMatchForQuestions.id,
                                 round as any,
                                 "question",
-                                e.target.value,
-                              )
+                                e.target.value
+                              );
                             }}
                             placeholder={`Enter question for Round ${round}...`}
                             className="bg-gray-700 border-gray-600 text-white"
@@ -1549,28 +1824,29 @@ export default function FamilyFeudControl() {
                           <Label className="text-gray-300">Answers</Label>
                           <div className="space-y-2">
                             {(
-                              selectedMatchForQuestions.questions.find((q) => q.round === round)?.answers || [
-                                { text: "", points: 0 },
-                              ]
+                              selectedMatchForQuestions.questions.find(
+                                (q) => q.round === round
+                              )?.answers || [{ text: "", points: 0 }]
                             ).map((answer, answerIndex) => (
                               <div key={answerIndex} className="flex gap-2">
                                 <Input
                                   value={answer.text}
                                   onChange={(e) => {
-                                    const currentAnswers = selectedMatchForQuestions.questions.find(
-                                      (q) => q.round === round,
-                                    )?.answers || [{ text: "", points: 0 }]
-                                    const updatedAnswers = [...currentAnswers]
+                                    const currentAnswers =
+                                      selectedMatchForQuestions.questions.find(
+                                        (q) => q.round === round
+                                      )?.answers || [{ text: "", points: 0 }];
+                                    const updatedAnswers = [...currentAnswers];
                                     updatedAnswers[answerIndex] = {
                                       ...updatedAnswers[answerIndex],
                                       text: e.target.value,
-                                    }
+                                    };
                                     updateQuestionInTournament(
                                       selectedMatchForQuestions.id,
                                       round as any,
                                       "answers",
-                                      updatedAnswers,
-                                    )
+                                      updatedAnswers
+                                    );
                                   }}
                                   placeholder={`Answer ${answerIndex + 1}`}
                                   className="flex-1 bg-gray-700 border-gray-600 text-white"
@@ -1579,40 +1855,47 @@ export default function FamilyFeudControl() {
                                   type="number"
                                   value={answer.points}
                                   onChange={(e) => {
-                                    const currentAnswers = selectedMatchForQuestions.questions.find(
-                                      (q) => q.round === round,
-                                    )?.answers || [{ text: "", points: 0 }]
-                                    const updatedAnswers = [...currentAnswers]
+                                    const currentAnswers =
+                                      selectedMatchForQuestions.questions.find(
+                                        (q) => q.round === round
+                                      )?.answers || [{ text: "", points: 0 }];
+                                    const updatedAnswers = [...currentAnswers];
                                     updatedAnswers[answerIndex] = {
                                       ...updatedAnswers[answerIndex],
-                                      points: Number.parseInt(e.target.value) || 0,
-                                    }
+                                      points:
+                                        Number.parseInt(e.target.value) || 0,
+                                    };
                                     updateQuestionInTournament(
                                       selectedMatchForQuestions.id,
                                       round as any,
                                       "answers",
-                                      updatedAnswers,
-                                    )
+                                      updatedAnswers
+                                    );
                                   }}
                                   placeholder="Points"
                                   className="w-20 bg-gray-700 border-gray-600 text-white"
                                 />
-                                {(selectedMatchForQuestions.questions.find((q) => q.round === round)?.answers?.length ||
-                                  0) > 1 && (
+                                {(selectedMatchForQuestions.questions.find(
+                                  (q) => q.round === round
+                                )?.answers?.length || 0) > 1 && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => {
                                       const currentAnswers =
-                                        selectedMatchForQuestions.questions.find((q) => q.round === round)?.answers ||
-                                        []
-                                      const updatedAnswers = currentAnswers.filter((_, i) => i !== answerIndex)
+                                        selectedMatchForQuestions.questions.find(
+                                          (q) => q.round === round
+                                        )?.answers || [];
+                                      const updatedAnswers =
+                                        currentAnswers.filter(
+                                          (_, i) => i !== answerIndex
+                                        );
                                       updateQuestionInTournament(
                                         selectedMatchForQuestions.id,
                                         round as any,
                                         "answers",
-                                        updatedAnswers,
-                                      )
+                                        updatedAnswers
+                                      );
                                     }}
                                     className="text-gray-400 hover:text-white"
                                   >
@@ -1628,14 +1911,19 @@ export default function FamilyFeudControl() {
                             variant="outline"
                             onClick={() => {
                               const currentAnswers =
-                                selectedMatchForQuestions.questions.find((q) => q.round === round)?.answers || []
-                              const updatedAnswers = [...currentAnswers, { text: "", points: 0 }]
+                                selectedMatchForQuestions.questions.find(
+                                  (q) => q.round === round
+                                )?.answers || [];
+                              const updatedAnswers = [
+                                ...currentAnswers,
+                                { text: "", points: 0 },
+                              ];
                               updateQuestionInTournament(
                                 selectedMatchForQuestions.id,
                                 round as any,
                                 "answers",
-                                updatedAnswers,
-                              )
+                                updatedAnswers
+                              );
                             }}
                             className="mt-2 border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
                           >
@@ -1653,9 +1941,9 @@ export default function FamilyFeudControl() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setShowQuestionDialog(false)
-                    setSelectedMatchForQuestions(null)
-                    setEditingQuestion(null)
+                    setShowQuestionDialog(false);
+                    setSelectedMatchForQuestions(null);
+                    setEditingQuestion(null);
                   }}
                   className="border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
                 >
@@ -1663,9 +1951,9 @@ export default function FamilyFeudControl() {
                 </Button>
                 <Button
                   onClick={() => {
-                    setShowQuestionDialog(false)
-                    setSelectedMatchForQuestions(null)
-                    setEditingQuestion(null)
+                    setShowQuestionDialog(false);
+                    setSelectedMatchForQuestions(null);
+                    setEditingQuestion(null);
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
@@ -1678,5 +1966,5 @@ export default function FamilyFeudControl() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
