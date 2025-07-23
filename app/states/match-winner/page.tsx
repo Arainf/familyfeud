@@ -45,73 +45,120 @@ export default function MatchWinnerPage() {
   const matchIndex = gameData.tournament.currentMatchIndex;
   const match = gameData.tournament.matches?.[matchIndex];
 
-  if (!match || !gameData.tournament.teams) {
+  // Only show winner if currentRound is 4 (final round)
+  const isFinalRound = match && (match.currentRound === 4 || match.currentRound === "4");
+  if (!match || !gameData.tournament.teams || !isFinalRound) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-900 via-orange-900 to-yellow-700">
-        <span className="text-white text-2xl animate-pulse">
-          Match information unavailable.
-        </span>
+
+        <span className="text-white text-2xl animate-pulse">Winner will be revealed after the final round!</span>
+
       </div>
     );
   }
 
-  // Try to get teams and scores from the bracket match first
-  let team1 = gameData.tournament.teams?.find(
-    (t: any) => t.name === match.team1Id
-  );
-  let team2 = gameData.tournament.teams?.find(
-    (t: any) => t.name === match.team2Id
-  );
-  let team1Score = match.team1Score;
-  let team2Score = match.team2Score;
-
-  // Fallback to top-level config if bracket info is missing
+  // Get teams and scores
+  let team1 = gameData.tournament.teams?.find((t: any) => t.name === match.team1Id);
+  let team2 = gameData.tournament.teams?.find((t: any) => t.name === match.team2Id);
+  let team1Score = typeof match.team1Score === "number" ? match.team1Score : 0;
+  let team2Score = typeof match.team2Score === "number" ? match.team2Score : 0;
   if (!team1 && gameData.team1Config) team1 = gameData.team1Config;
   if (!team2 && gameData.team2Config) team2 = gameData.team2Config;
-  if (typeof team1Score !== "number" && typeof gameData.team1Score === "number")
-    team1Score = gameData.team1Score;
-  if (typeof team2Score !== "number" && typeof gameData.team2Score === "number")
-    team2Score = gameData.team2Score;
 
-  // Determine winner
-  let winnerName = match.winnerName;
-  if (
-    !winnerName &&
-    typeof team1Score === "number" &&
-    typeof team2Score === "number"
-  ) {
-    winnerName = team1Score > team2Score ? team1?.name : team2?.name;
+  // Determine winner/loser
+  let winner, loser, winnerScore, loserScore;
+  if (team1Score >= team2Score) {
+    winner = team1;
+    loser = team2;
+    winnerScore = team1Score;
+    loserScore = team2Score;
+  } else {
+    winner = team2;
+    loser = team1;
+    winnerScore = team2Score;
+    loserScore = team1Score;
   }
-  let winnerColor = "gray";
-  if (winnerName && team1 && winnerName === team1.name)
-    winnerColor = team1.color || team1.primaryColor || "gray";
-  else if (winnerName && team2 && winnerName === team2.name)
-    winnerColor = team2.color || team2.primaryColor || "gray";
+
+  // Choose background
+  const bgUrl = "/winner-bg.png";
+  // fallback to a nice gradient if bg not found
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-orange-900 to-yellow-700 p-4">
-      <div className="bg-black/70 rounded-3xl shadow-2xl p-12 flex flex-col items-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-yellow-300 mb-6 drop-shadow-lg animate-bounce">
-          Match Winner!
-        </h1>
-        <div className="flex flex-col items-center gap-6">
-          <div
-            className={`w-24 h-24 rounded-full flex items-center justify-center text-6xl font-bold border-8 ${
-              getColorClasses(winnerColor).bg
-            } shadow-xl mb-4 animate-pulse`}
-          ></div>
-          <span className="text-3xl md:text-5xl font-extrabold text-white tracking-wide animate-pulse">
-            {winnerName || "TBD"}
-          </span>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: `url(${bgUrl}), linear-gradient(135deg, #fbbf24 0%, #f59e42 50%, #f472b6 100%)`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Confetti effect */}
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <svg className="absolute w-full h-full" style={{ opacity: 0.15 }}>
+          <defs>
+            <radialGradient id="confetti" cx="50%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#fffbe6" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </radialGradient>
+          </defs>
+          {[...Array(100)].map((_, i) => (
+            <circle
+              key={i}
+              cx={Math.random() * 100 + "%"}
+              cy={Math.random() * 100 + "%"}
+              r={Math.random() * 8 + 2}
+              fill="url(#confetti)"
+              opacity={Math.random() * 0.6 + 0.2}
+            />
+          ))}
+        </svg>
+      </div>
+
+      <div className="relative z-20 bg-black/80 rounded-3xl shadow-2xl p-10 md:p-16 flex flex-col items-center max-w-2xl mx-auto border-4 border-yellow-400">
+        <h1 className="text-5xl md:text-7xl font-extrabold text-yellow-300 mb-8 drop-shadow-lg animate-bounce">🏆 Match Winner!</h1>
+        <div className="flex flex-col md:flex-row items-center gap-10 w-full justify-between">
+          {/* Winner Card */}
+          <div className="flex flex-col items-center bg-yellow-100/10 rounded-2xl p-6 shadow-xl border-4 border-yellow-400 min-w-[180px] max-w-xs">
+            <img
+              src={winner?.logo || "/logo.gif"}
+              alt="Winner Logo"
+              className="w-32 h-32 object-contain rounded-full border-4 border-yellow-300 bg-white/10 shadow-lg mb-4 animate-pulse"
+              style={{ filter: "drop-shadow(0 0 32px #fde68a)" }}
+            />
+            <span className="text-3xl md:text-4xl font-bold text-yellow-200 mb-2 drop-shadow-lg animate-pulse">
+              {winner?.name || "Winner"}
+            </span>
+            <span className="text-2xl font-bold text-white mb-1">Score: {winnerScore}</span>
+            <span className="text-lg font-semibold text-yellow-400 tracking-wide mb-2">Congratulations!</span>
+            <span className="text-base text-yellow-200 italic text-center">{winner?.motto || ""}</span>
+          </div>
+
+          {/* VS Divider */}
+          <div className="text-5xl font-black text-yellow-200 mx-4 hidden md:block">VS</div>
+
+          {/* Loser Card */}
+          <div className="flex flex-col items-center bg-gray-900/70 rounded-2xl p-6 shadow-lg border-4 border-gray-600 min-w-[180px] max-w-xs opacity-60 grayscale">
+            <img
+              src={loser?.logo || "/logo.gif"}
+              alt="Loser Logo"
+              className="w-28 h-28 object-contain rounded-full border-4 border-gray-400 bg-white/10 shadow mb-4"
+            />
+            <span className="text-2xl md:text-3xl font-bold text-gray-200 mb-2">
+              {loser?.name || "Loser"}
+            </span>
+            <span className="text-xl font-bold text-gray-100 mb-1">Score: {loserScore}</span>
+            <span className="text-base font-semibold text-gray-400 tracking-wide mb-2">Good effort!</span>
+            <span className="text-base text-gray-300 italic text-center">{loser?.motto || ""}</span>
+          </div>
+
         </div>
-        <div className="mt-8">
-          <button
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-3 rounded-full shadow-lg text-xl transition-all"
-            onClick={() => router.replace("/states/bracket-show")}
-          >
-            Continue to Bracket
-          </button>
-        </div>
+
+        <button
+          className="mt-10 bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-10 py-4 rounded-full shadow-lg text-2xl transition-all animate-bounce"
+          onClick={() => router.replace("/states/bracket-show")}
+        >
+          Continue to Bracket
+        </button>
       </div>
     </div>
   );
