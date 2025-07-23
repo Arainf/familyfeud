@@ -271,6 +271,7 @@ export default function FamilyFeudControl() {
       primaryColor: "#3b82f6",
       secondaryColor: "#2563eb",
       boxImage: "star",
+      logo: "/aaoxmao.png",
       motto: "Ready to dominate!",
       wins: 0,
       losses: 0,
@@ -322,15 +323,12 @@ export default function FamilyFeudControl() {
       const team2 = currentTournament.teams.find(t => t.name === currentMatch.team2Id)
 
       if (team1 && team2) {
-        setTeam1Score(currentMatch.score1 || 0)
-        setTeam2Score(currentMatch.score2 || 0)
         setRoundScore(0)
         setStrikes(0)
         setRevealedAnswers([])
         setCurrentRound(currentMatch.currentRound || 1)
         setCurrentGameState(currentMatch.gameState || "idle")
 
-        // Update team configs for the view
         const team1Config = {
           name: team1.name,
           color1: team1.primaryColor.replace("#", ""),
@@ -358,8 +356,8 @@ export default function FamilyFeudControl() {
           currentRound: currentMatch.currentRound || 1,
           currentQuestionIndex: currentMatch.currentQuestionIndex,
           revealedAnswers: [],
-          team1Score: currentMatch.score1 || 0,
-          team2Score: currentMatch.score2 || 0,
+          team1Score: team1Score,
+          team2Score: team2Score,
           roundScore: 0,
           currentTeam: "team1",
           strikes: 0,
@@ -386,6 +384,14 @@ export default function FamilyFeudControl() {
       }
     }
   }, [currentMatch, currentTournament])
+
+  // Reset team scores ONLY when the match ID changes (not just round)
+  useEffect(() => {
+    if (currentMatch && currentTournament) {
+      setTeam1Score(0)
+      setTeam2Score(0)
+    }
+  }, [currentMatch?.id])
 
   // Timer functionality
   useEffect(() => {
@@ -536,7 +542,7 @@ export default function FamilyFeudControl() {
     }
   }
 
-  const createTournament = async () => {
+  const handleCreateTournament = async () => {
     // Enforce exactly 3 teams for this bracket
     if (!user || !tournamentForm.name.trim() || tournamentTeams.length !== 3) {
       alert("You must have exactly 3 teams to start the tournament.");
@@ -582,7 +588,7 @@ export default function FamilyFeudControl() {
     ];
 
     try {
-      const { data, error } = await createTournamentDB({
+      const { data, error } = await createTournamentDB(user.id, {
         name: tournamentForm.name,
         mode: 'custom3team',
         teams: tournamentTeams,
@@ -1033,8 +1039,8 @@ export default function FamilyFeudControl() {
           {/* Team Scores */}
         
           <TeamScoresCard
-            team1Name={currentTournament?.teams[0]?.name || "Team 1"}
-            team2Name={currentTournament?.teams[1]?.name || "Team 2"}
+            team1Name={currentMatch ? currentTournament?.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1" : "Team 1"}
+            team2Name={currentMatch ? currentTournament?.teams.find(t => t.name === currentMatch.team2Id)?.name || "Team 2" : "Team 2"}
             team1Score={team1Score}
             team2Score={team2Score}
             showScoreAnimation={showScoreAnimation}
@@ -1299,7 +1305,7 @@ export default function FamilyFeudControl() {
 
               <div className="flex gap-4">
                 <Button
-                  onClick={createTournament}
+                  onClick={handleCreateTournament}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                   disabled={tournamentTeams.length < 2 || !tournamentForm.name.trim()}
                 >
