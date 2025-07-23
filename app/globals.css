@@ -146,6 +146,32 @@
   }
 }
 
+@keyframes scaleUp {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.animate-scale-up {
+  animation: scaleUp 2s ease-in-out infinite;
+}
+
+@keyframes scaleUpText {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.animate-scale-up-text {
+  animation: scaleUpText 2s ease-in-out infinite;
+}
+
 /* View Transitions */
 ::view-transition-old(family-feud-logo),
 ::view-transition-new(family-feud-logo) {
