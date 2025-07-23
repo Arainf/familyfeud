@@ -2,7 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-::-webkit-scrollbar{
+/* Import Mozaic GEO font variants */
+@font-face {
+  font-family: "Mozaic GEO";
+  src: url("./fonts/MozaicGEO-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Mozaic GEO";
+  src: url("./fonts/MozaicGEO-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Mozaic GEO";
+  src: url("./fonts/MozaicGEO-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Mozaic GEO";
+  src: url("./fonts/MozaicGEO-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+::-webkit-scrollbar {
   display: none;
 }
 
