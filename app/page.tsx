@@ -2,6 +2,7 @@
 
 import React from "react"
 import { useState, useEffect, useRef } from "react"
+import { getPointMultiplier } from "@/lib/game-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,9 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Switch } from "@/components/ui/switch"
-import { Slider } from "@/components/ui/slider"
-import CountUpAnimation from "@/components/CountUpAnimation"
+import  SoundControlCard  from "@/components/feud/SoundControlCard"
 import {
   uploadImage,
   signUp,
@@ -73,28 +72,22 @@ import BracketManagementCard from "@/components/feud/BracketManagementCard"
 // Game States for the new flow
 type GameState =
   | "idle"
-  | "tournament-start"
   | "bracket-show"
   | "team-vs"
   | "round-start"
   | "game-play"
-  | "pass-or-play"
   | "round-end-reveal"
-  | "post-round-scoring"
   | "match-winner"
   | "bracket-update"
   | "tournament-winner"
 
 const gameStateNames = {
   idle: "Idle Screen",
-  "tournament-start": "Tournament Start",
   "bracket-show": "Bracket Display",
   "team-vs": "Team Face-off",
   "round-start": "Round Start",
   "game-play": "Game Play",
-  "pass-or-play": "Pass or Play",
   "round-end-reveal": "Round End Reveal",
-  "post-round-scoring": "Post Round Scoring",
   "match-winner": "Match Winner",
   "bracket-update": "Bracket Update",
   "tournament-winner": "Tournament Winner",
@@ -102,14 +95,11 @@ const gameStateNames = {
 
 const gameStateRoutes = {
   idle: "/states/idle",
-  "tournament-start": "/states/tournament-start",
   "bracket-show": "/states/bracket-show",
   "team-vs": "/states/team-vs",
   "round-start": "/states/round-start",
   "game-play": "/states/game-play",
-  "pass-or-play": "/states/pass-or-play",
   "round-end-reveal": "/states/round-end-reveal",
-  "post-round-scoring": "/states/post-round-scoring",
   "match-winner": "/states/match-winner",
   "bracket-update": "/states/bracket-update",
   "tournament-winner": "/states/tournament-winner",
@@ -189,13 +179,18 @@ interface UserType {
 }
 
 interface TeamConfig {
-  name: string
-  primaryColor: string
-  secondaryColor: string
-  boxImage: string
-  boxImageUrl?: string
-  logo?: string
-  motto?: string
+  name: string;
+  primaryColor: string;
+  secondaryColor: string;
+  boxImage: string;
+  boxImageUrl?: string;
+  logo?: string;
+  logoUrl?: string; // Added to store the URL for the logo
+  motto?: string;
+  icon?: string; // Added for icon name
+  iconUrl?: string; // Added for icon URL
+  wins: number;
+  losses: number;
 }
 
 interface MatchQuestion {
@@ -252,18 +247,33 @@ export default function FamilyFeudControl() {
   })
   const [tournamentTeams, setTournamentTeams] = useState<TeamConfig[]>([
     {
-      name: "Team 1",
-      primaryColor: "#ef4444",
-      secondaryColor: "#dc2626",
+      name: "SITEAO X LAAO",
+      primaryColor: "#F79608",
+      secondaryColor: "#9FE20F",
       boxImage: "crown",
       motto: "Champions in the making!",
+      logo: "/siteaoxlaao.png",
+      wins: 0,
+      losses: 0,
     },
     {
-      name: "Team 2",
+      name: "NAO X EAO",
+      primaryColor: "#E0445D",
+      secondaryColor: "#30AFD9",
+      boxImage: "star",
+      motto: "Ready to dominate!",  
+      logo: "/naoxeao.png",
+      wins: 0,
+      losses: 0,
+    },
+    {
+      name: "AAO X MAO",
       primaryColor: "#3b82f6",
       secondaryColor: "#2563eb",
       boxImage: "star",
       motto: "Ready to dominate!",
+      wins: 0,
+      losses: 0,
     },
   ])
 
@@ -304,6 +314,78 @@ export default function FamilyFeudControl() {
 
   // File upload
   const [uploadingImage, setUploadingImage] = useState(false)
+
+  // Sync game state when the current match changes
+  useEffect(() => {
+    if (currentMatch && currentTournament) {
+      const team1 = currentTournament.teams.find(t => t.name === currentMatch.team1Id)
+      const team2 = currentTournament.teams.find(t => t.name === currentMatch.team2Id)
+
+      if (team1 && team2) {
+        setTeam1Score(currentMatch.score1 || 0)
+        setTeam2Score(currentMatch.score2 || 0)
+        setRoundScore(0)
+        setStrikes(0)
+        setRevealedAnswers([])
+        setCurrentRound(currentMatch.currentRound || 1)
+        setCurrentGameState(currentMatch.gameState || "idle")
+
+        // Update team configs for the view
+        const team1Config = {
+          name: team1.name,
+          color1: team1.primaryColor.replace("#", ""),
+          color2: team1.secondaryColor.replace("#", ""),
+          icon: team1.boxImage,
+          logo: team1.logo,
+          motto: team1.motto,
+          wins: team1.wins,
+          losses: team1.losses,
+        }
+
+        const team2Config = {
+          name: team2.name,
+          color1: team2.primaryColor.replace("#", ""),
+          color2: team2.secondaryColor.replace("#", ""),
+          icon: team2.boxImage,
+          logo: team2.logo,
+          motto: team2.motto,
+          wins: team2.wins,
+          losses: team2.losses,
+        }
+
+        const gameState = {
+          gameState: currentMatch.gameState || "idle",
+          currentRound: currentMatch.currentRound || 1,
+          currentQuestionIndex: currentMatch.currentQuestionIndex,
+          revealedAnswers: [],
+          team1Score: currentMatch.score1 || 0,
+          team2Score: currentMatch.score2 || 0,
+          roundScore: 0,
+          currentTeam: "team1",
+          strikes: 0,
+          team1Config,
+          team2Config,
+          showStrikeOverlay: false,
+          fastMoneyScore: 0,
+          fastMoneyAnswers: [],
+          gameWinner: null,
+          tournamentWinner: null,
+          currentQuestion: currentMatch.questions.find(q => q.round === (currentMatch.currentRound || 1)) || null,
+          passOrPlayChoice: null,
+          allAnswersRevealed: false,
+          roundWinner: null,
+          tournament: {
+            name: currentTournament.name,
+            teams: currentTournament.teams,
+            matches: currentTournament.matches,
+            currentMatchIndex: currentTournament.matches.findIndex(m => m.id === currentMatch.id),
+          },
+        }
+
+        broadcast?.postMessage(gameState)
+      }
+    }
+  }, [currentMatch, currentTournament])
 
   // Timer functionality
   useEffect(() => {
@@ -366,18 +448,24 @@ export default function FamilyFeudControl() {
         currentTeam,
         strikes,
         team1Config: {
-          name: currentTournament.teams[0]?.name || "Team 1",
-          color: currentTournament.teams[0]?.primaryColor?.replace("#", "") || "red",
-          icon: currentTournament.teams[0]?.boxImage || "crown",
-          logo: currentTournament.teams[0]?.logo,
-          motto: currentTournament.teams[0]?.motto,
+          name: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1",
+          color1: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.primaryColor?.replace("#", "") || "red",
+          color2: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.secondaryColor?.replace("#", "") || "red",
+          icon: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.boxImage || "crown",
+          logo: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.logo,
+          motto: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.motto,
+          wins: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.wins || 0,
+          losses: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.losses || 0,
         },
         team2Config: {
-          name: currentTournament.teams[1]?.name || "Team 2",
-          color: currentTournament.teams[1]?.primaryColor?.replace("#", "") || "blue",
-          icon: currentTournament.teams[1]?.boxImage || "star",
-          logo: currentTournament.teams[1]?.logo,
-          motto: currentTournament.teams[1]?.motto,
+          name: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.name || "Team 2",
+          color1: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.primaryColor?.replace("#", "") || "blue",
+          color2: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.secondaryColor?.replace("#", "") || "blue",
+          icon: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.boxImage || "star",
+          logo: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.logo,
+          motto: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.motto,
+          wins: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.wins || 0,
+          losses: currentTournament.teams.find(t => t.name === currentMatch.team2Id)?.losses || 0,
         },
         showStrikeOverlay: false,
         fastMoneyScore: 0,
@@ -449,56 +537,79 @@ export default function FamilyFeudControl() {
   }
 
   const createTournament = async () => {
-    if (!user || !tournamentForm.name.trim() || tournamentTeams.length < 2) return
-
-    const matches: Match[] = []
-
-    // Generate matches based on tournament mode
-    if (tournamentForm.mode === "roundrobin") {
-      for (let i = 0; i < tournamentTeams.length; i++) {
-        for (let j = i + 1; j < tournamentTeams.length; j++) {
-          matches.push({
-            id: `match-${i}-${j}`,
-            team1Id: tournamentTeams[i].name,
-            team2Id: tournamentTeams[j].name,
-            status: 'pending',
-            questions: [],
-            currentRound: 1,
-            currentQuestionIndex: 0,
-            gameState: "idle",
-          } as Match)
-        }
-      }
+    // Enforce exactly 3 teams for this bracket
+    if (!user || !tournamentForm.name.trim() || tournamentTeams.length !== 3) {
+      alert("You must have exactly 3 teams to start the tournament.");
+      return;
     }
 
+    // Create the fixed 3-match bracket
+    // Match 1: Team 1 vs Team 2
+    // Match 2: Winner of Match 1 vs Team 3 (team index 2)
+    // Match 3: Loser of Match 1 vs Loser of Match 2
+    const [teamA, teamB, teamC] = tournamentTeams;
+    const matches: Match[] = [
+      {
+        id: 'match-1',
+        team1Id: teamA.name,
+        team2Id: teamB.name,
+        status: 'pending',
+        questions: [],
+        currentRound: 1,
+        currentQuestionIndex: 0,
+        gameState: 'idle',
+      },
+      {
+        id: 'match-2',
+        team1Id: '', // Will be set to Winner of Match 1
+        team2Id: teamC.name,
+        status: 'pending',
+        questions: [],
+        currentRound: 1,
+        currentQuestionIndex: 0,
+        gameState: 'idle',
+      },
+      {
+        id: 'match-3',
+        team1Id: '', // Will be set to Loser of Match 1
+        team2Id: '', // Will be set to Loser of Match 2
+        status: 'pending',
+        questions: [],
+        currentRound: 1,
+        currentQuestionIndex: 0,
+        gameState: 'idle',
+      },
+    ];
+
     try {
-      const { data, error } = await createTournamentDB(user.id, {
+      const { data, error } = await createTournamentDB({
         name: tournamentForm.name,
-        mode: tournamentForm.mode,
-        teams: tournamentTeams, // Store complete team details
-        matches: matches,
-        status: "setup",
+        mode: 'custom3team',
+        teams: tournamentTeams,
+        matches,
+        status: 'setup',
+        created_at: new Date().toISOString(),
         current_match_index: 0,
-      })
+      });
 
       if (error) {
-        console.error("Error creating tournament:", error)
-        alert("Failed to create tournament")
-        return
+        console.error("Error creating tournament:", error);
+        alert("Failed to create tournament");
+        return;
       }
 
       if (data) {
-        setCurrentTournament(data)
-        setCurrentMatch(matches[0])
-        setShowTournamentDialog(false)
+        setCurrentTournament(data);
+        setCurrentMatch(matches[0]);
+        setShowTournamentDialog(false);
         // Reset tournament form
-        setTournamentForm({ name: "", mode: "roundrobin" })
+        setTournamentForm({ name: "", mode: "custom3team" });
         // Reload tournaments to get updated list
-        loadUserTournaments(user.id)
+        loadUserTournaments(user.id);
       }
     } catch (error) {
-      console.error("Error creating tournament:", error)
-      alert("Failed to create tournament")
+      console.error("Error creating tournament:", error);
+      alert("Failed to create tournament");
     }
   }
 
@@ -529,6 +640,8 @@ export default function FamilyFeudControl() {
       secondaryColor: teamColors[(tournamentTeams.length + 1) % teamColors.length].hex,
       boxImage: teamIcons[tournamentTeams.length % teamIcons.length].value,
       motto: "Ready to compete!",
+      wins: 0,
+      losses: 0,
     }
     setTournamentTeams([...tournamentTeams, newTeam])
   }
@@ -677,18 +790,39 @@ export default function FamilyFeudControl() {
   }
 
   const awardPoints = () => {
-    setShowScoreAnimation(true)
-    setAnimatingScore(roundScore)
-    setTimeout(() => {
-      if (currentTeam === 'team1') {
-        setTeam1Score((prev) => prev + roundScore)
-      } else {
-        setTeam2Score((prev) => prev + roundScore)
-      }
-      setRoundScore(0)
-      setShowScoreAnimation(false)
-    }, 2000)
-  }
+  setShowScoreAnimation(true);
+  setAnimatingScore(roundScore);
+  // Import getPointMultiplier at the top if not already
+  // import { getPointMultiplier } from "@/lib/game-utils";
+  const multiplier = getPointMultiplier(currentRound);
+  const pointsToAdd = roundScore * multiplier;
+  setTimeout(() => {
+    if (currentTeam === 'team1') {
+      setTeam1Score((prev) => prev + pointsToAdd);
+    } else {
+      setTeam2Score((prev) => prev + pointsToAdd);
+    }
+    setRoundScore(0);
+    setShowScoreAnimation(false);
+
+    // After round 4, check for tie and trigger tiebreaker if needed
+    if (currentRound === 4) {
+      setTimeout(() => {
+        // Use the most up-to-date scores
+        let t1 = 0, t2 = 0;
+        setTeam1Score((prev1) => { t1 = prev1; return prev1; });
+        setTeam2Score((prev2) => { t2 = prev2; return prev2; });
+        setTimeout(() => {
+          if (t1 === t2) {
+            setCurrentRound('tiebreaker');
+            // Optionally update match/tournament state here
+          }
+        }, 100); // Give React state a moment to flush
+      }, 300);
+    }
+  }, 2000);
+}
+
 
   // User management functions
   const handleAuth = async () => {
@@ -911,12 +1045,14 @@ export default function FamilyFeudControl() {
             onPlay={() => {
               setShowPlayPass(false)
               setCurrentGameState('game-play')
+              localStorage.setItem('passOrPlayChoice', 'play')
               localStorage.setItem('showPassOrPlayOverlay', 'false')
             }}
             onPass={() => {
               setShowPlayPass(false)
               setCurrentTeam(currentTeam === 'team1' ? 'team2' : 'team1')
               setCurrentGameState('game-play')
+              localStorage.setItem('passOrPlayChoice', 'pass')
               localStorage.setItem('showPassOrPlayOverlay', 'false')
             }}
             onSwitchTeam={() => {
@@ -932,7 +1068,7 @@ export default function FamilyFeudControl() {
               localStorage.setItem('showPassOrPlayOverlay', 'true')
             }}
           />
-
+        
           {/* Question Card */}
           <QuestionCard
             question={currentMatch?.questions.find((q) => q.round === currentRound)?.question || "No question set."}
@@ -963,7 +1099,9 @@ export default function FamilyFeudControl() {
             setCurrentMatch={setCurrentMatch}
             onCompleteMatch={(matchId) => {
               if (!currentTournament) return;
-              const updatedMatches = currentTournament.matches.map((m) => m.id === matchId ? { ...m, status: 'completed' } : m);
+              const updatedMatches = currentTournament.matches.map((m) =>
+                m.id === matchId ? { ...m, status: "completed" as const } : m
+              );
               setCurrentTournament({ ...currentTournament, matches: updatedMatches });
               // Optionally update bracket logic here
             }}
@@ -1064,7 +1202,7 @@ export default function FamilyFeudControl() {
                           {team.iconUrl ? (
                             <img src={team.iconUrl || "/placeholder.svg"} alt="Team Icon" className="w-6 h-6 rounded" />
                           ) : (
-                            React.createElement(getTeamIcon(team.icon), { className: "w-5 h-5 text-white" })
+                            React.createElement(getTeamIcon(team.icon || 'Shield'), { className: "w-5 h-5 text-white" })
                           )}
                         </div>
                         <Input
@@ -1286,7 +1424,7 @@ export default function FamilyFeudControl() {
                           {team.iconUrl ? (
                             <img src={team.iconUrl || "/placeholder.svg"} alt="Team Icon" className="w-8 h-8 rounded" />
                           ) : (
-                            React.createElement(getTeamIcon(team.icon), { className: "w-8 h-8 text-white" })
+                            React.createElement(getTeamIcon(team.icon || 'Shield'), { className: "w-8 h-8 text-white" })
                           )}
                           {team.logo && (
                             <img src={team.logo || "/placeholder.svg"} alt="Team Logo" className="w-8 h-8 rounded" />

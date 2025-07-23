@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 
 interface TeamConfig {
   name: string
-  color: string
+  color1: string
+  color2: string
   icon: string
   logo?: string
   motto?: string
@@ -74,6 +76,8 @@ export default function GamePlayPage() {
   const router = useRouter();
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [showPassOrPlayOverlay, setShowPassOrPlayOverlay] = useState(false)
+  const [passOrPlayChoice, setPassOrPlayChoice] = useState<"play" | "pass" | null>(null)
+  const [passOrPlayOverlayVisible, setPassOrPlayOverlayVisible] = useState(false)
   const [showStrikeOverlay, setShowStrikeOverlay] = useState(false)
   const [showStealOverlay, setShowStealOverlay] = useState(false);
   const [stealVisual, setStealVisual] = useState(false);
@@ -82,7 +86,7 @@ export default function GamePlayPage() {
   const [roundPoints, setRoundPoints] = useState('');
   const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
   const [stealAnswer, setStealAnswer] = useState("");
-  const [stealResult, setStealResult] = useState<null | 'success' | 'fail'>(null);
+  const [stealResult, setStealResult] = useState<'success' | 'fail' | null>(null);
 
   useEffect(() => {
     const loadGameState = () => {
@@ -99,6 +103,7 @@ export default function GamePlayPage() {
               localStorage.setItem('showStrikeOverlay', 'false')
             }, 1200)
           }
+          setPassOrPlayChoice(localStorage.getItem('passOrPlayChoice') as 'play' | 'pass' || null)
           setShowStealOverlay(localStorage.getItem('showStealOverlay') === 'true');
           setStealTeam((localStorage.getItem('stealTeam') as 'team1' | 'team2') || 'team2');
           setStealVisual(localStorage.getItem('showStealVisualOverlay') === 'true');
@@ -122,10 +127,25 @@ export default function GamePlayPage() {
       const timeout = setTimeout(() => {
         setStealVisual(false);
         localStorage.setItem('showStealVisualOverlay', 'false');
-      }, 1500);
+      }, 2500);
       return () => clearTimeout(timeout);
     }
   }, [stealVisual]);
+
+  // Delay hiding of the Pass/Play overlay to allow animations
+  useEffect(() => {
+    if (showPassOrPlayOverlay) {
+      localStorage.setItem('passOrPlayChoice', 'none');
+      setPassOrPlayOverlayVisible(true);
+     
+    } else if (passOrPlayOverlayVisible) {
+      const timeout = setTimeout(() => {
+        setPassOrPlayOverlayVisible(false);
+      }, 2000); // adjust delay as needed
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [showPassOrPlayOverlay, passOrPlayOverlayVisible]);
 
   useEffect(() => {
     const channel = new BroadcastChannel("feud-game-state");
@@ -164,8 +184,11 @@ export default function GamePlayPage() {
     )
   }
 
-  const team1Colors = getColorClasses(gameData.team1Config.color)
-  const team2Colors = getColorClasses(gameData.team2Config.color)
+  const team1Colors1 = gameData.team1Config.color1
+  const team1Colors2 = gameData.team1Config.color2
+  const team2Colors1 = gameData.team2Config.color1
+  const team2Colors2 = gameData.team2Config.color2
+  
 
   return (
     <div className="min-h-screen relative overflow-hidden"
@@ -177,22 +200,38 @@ export default function GamePlayPage() {
     }}
     >
       {/* Cumulative Scores (top left/right) */}
-      {showPassOrPlayOverlay && (
+      {passOrPlayOverlayVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="text-center flex flex-col justify-center align-middle items-center animate-pulse">
-            <img src="/play.png" alt="" />
-            <img src="/or.png" alt="" className="w-40" />
-            <img src="/pass.png" alt="" />
+          <div className="text-center flex flex-col justify-center align-middle items-center">
+            <img
+              src="/play.png"
+              alt="Play"
+              className={`transition-all duration-500 mb-2 ${passOrPlayChoice === 'play' ? 'animate-scale-up drop-shadow-[0_0_30px_rgba(34,197,94,0.8)]' : passOrPlayChoice === 'pass' ? 'opacity-30 grayscale' : 'animate-pulse'}`}
+            />
+            <img src="/or.png" alt="or" className={`w-40 ${passOrPlayChoice === 'play' || passOrPlayChoice === 'pass' ? 'opacity-30 grayscale' : 'animate-pulse'}`} />
+            <img
+              src="/pass.png"
+              alt="Pass"
+              className={`transition-all duration-500 mt-2 ${passOrPlayChoice === 'pass' ? 'animate-scale-up drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]' : passOrPlayChoice === 'play' ? 'opacity-30 grayscale' : 'animate-pulse'}`}
+            />
           </div>
         </div>
       )}
   
-      {stealVisual && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-out">
-          {/* Replace the text below with an <img src="/steal.png" ... /> if you want an image */}
-          <h1 className="text-8xl font-extrabold text-yellow-400 drop-shadow-2xl animate-pulse">STEAL</h1>
+        {stealVisual && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <img
+            src="/steal.png"
+            alt="Steal"
+            style={{
+              width: "900px",
+              height: "auto",
+            }}
+            className="mt-2 scale-0 animate-[scaleUp_0.5s_ease-out_forwards]"
+          />
         </div>
       )}
+
       {showRoundSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-center max-w-md w-full">
@@ -245,16 +284,38 @@ export default function GamePlayPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col p-4 md:p-6">
         {/* Header */}
-        <div className="text-center py-6 md:py-8">
+        <motion.div 
+          className="text-center py-6 md:py-8"
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           <div className=" px-6 md:px-8 py-3 md:py-4 rounded-2xl  inline-block">
-            <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">
+            <h2 className="text-2xl md:text-3xl "
+            
+            style={{
+              color: '#FFF',
+              textAlign: 'center',
+              fontFamily: 'Mozaic GEO',
+              fontSize: 80.362,
+              fontStyle: 'normal',
+              fontWeight: 950,
+              lineHeight: 'normal',
+              textTransform: 'uppercase',
+            }}
+            >
               {roundNames[gameData.currentRound]}
             </h2>
           </div>
-        </div>
+        </motion.div>
 
         {/* Round Pool Score (center top) */}
-        <div className="flex justify-center mt-8 mb-4 ">
+        <motion.div 
+          className="flex justify-center mt-8 mb-4 "
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        >
             {/* Pool Score */}
             <div
               className="mx-auto mb-16 min-w-60 min-h-28 flex justify-center  items-center"
@@ -275,21 +336,26 @@ export default function GamePlayPage() {
             >
               {gameData.roundScore ?? 0}
             </div>
-        </div>
+        </motion.div>
         
 
         {/* Question */}
         {gameData.currentQuestion && (
           <>
             {/* Team overall scores left/right */}
-            <div className="absolute left-0 top-1/2 transform -translate-y-1/2 z-30">
+            <motion.div 
+              className="absolute flex justify-center flex-col align-middle items-center left-0 top-1/2 transform -translate-y-1/2 z-30"
+              initial={{ opacity: 0, x: -100 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            >
+               <img src={gameData.team1Config.logo} className="w-80 h-80 ml-6 object-contain absolute bottom-10"/>
               <div
                 style={{
                   minWidth: 120,
                   minHeight: 80,
-                  borderRadius: 20,
-                  border: '4px solid #7FE9FE',
-                  background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
+                  borderRadius: 40,
+                  background: `linear-gradient(292deg, #${team1Colors1} 36.24%, #${team1Colors2} 80.85%, #${team1Colors2} 103.71%)`,
                   color: '#000',
                   fontFamily: 'Mozaic GEO, sans-serif',
                   fontWeight: 900,
@@ -297,23 +363,34 @@ export default function GamePlayPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.15) inset',
+                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
                   marginLeft: 24,
-                  padding: '0 32px',
                 }}
-              >
-                <span className="text-lg font-bold text-yellow-100 mb-1">{gameData.team1Config.name}</span>
-                <span className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">{gameData.team1Score}</span>
+              > 
+              <div className="m-6 flex justify-center align-middle items-center" 
+                style={{
+                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
+                  borderRadius: 20,
+                }}>
+                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team1Score}</span>
               </div>
-            </div>
-            <div className="absolute right-0 top-1/2 transform -translate-y-1/2 z-30">
+              </div>
+            </motion.div>
+            
+            
+            <motion.div 
+              className="absolute right-0 top-1/2 flex justify-center flex-col align-middle items-center transform -translate-y-1/2 z-30"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            >
+               <img src={gameData.team2Config.logo} className="w-80 h-80 object-contain absolute bottom-10"/>
               <div
                 style={{
                   minWidth: 120,
                   minHeight: 80,
-                  borderRadius: 20,
-                  border: '4px solid #7FE9FE',
-                  background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
+                  borderRadius: 40,
+                  background: `linear-gradient(292deg, #${team2Colors1} 36.24%, #${team2Colors2} 80.85%, #${team2Colors2} 103.71%)`,
                   color: '#000',
                   fontFamily: 'Mozaic GEO, sans-serif',
                   fontWeight: 900,
@@ -321,17 +398,27 @@ export default function GamePlayPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.15) inset',
+                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
                   marginRight: 24,
-                  padding: '0 32px',
                 }}
-              >
-                 <span className="text-lg font-bold text-yellow-100 mb-1">{gameData.team2Config.name}</span>
-                 <span className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">{gameData.team2Score}</span>
+              > 
+              <div className="m-6 flex justify-center align-middle items-center" 
+                style={{
+                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
+                  borderRadius: 20,
+                }}>
+                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team2Score}</span>
               </div>
-            </div>
-            <div
+                 
+              </div>
+            </motion.div>
+
+
+            <motion.div
               className="mx-auto mb-20 max-w-6xl w-full"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
               style={{
                 color: '#000',
                 textAlign: 'center',
@@ -347,11 +434,16 @@ export default function GamePlayPage() {
               }}
             >
               {gameData.currentQuestion.question}
-            </div>
+            </motion.div>
             
 
 
-            <div className="flex-1 flex items-center justify-center px-4">
+            <motion.div 
+              className="flex-1 flex items-center justify-center px-4"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+            >
               <div className="relative max-w-6xl w-full">
                 {/* Answer board */}
                 <div
@@ -371,8 +463,20 @@ export default function GamePlayPage() {
                         {gameData.currentQuestion.answers
                           .slice(0, Math.ceil(gameData.currentQuestion.answers.length / 2))
                           .map((answer, index) => (
-                            <div
+                            <motion.div
                               key={index}
+                              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ 
+                                duration: 0.5, 
+                                delay: 0.4 + (index * 0.1), // Staggered delay based on index
+                                ease: [0.16, 1, 0.3, 1], // Custom ease for a snappy pop-in
+                                scale: {
+                                  type: "spring",
+                                  damping: 10,
+                                  stiffness: 200
+                                }
+                              }}
                               className={`relative overflow-hidden transition-all duration-700 ${gameData.revealedAnswers[index] ? 'flip-in' : ''}`}
                               style={{
                                 borderRadius: '18px',
@@ -444,7 +548,7 @@ export default function GamePlayPage() {
                                   </div>
                                 )}
                               </div>
-                            </div>
+                            </motion.div>
                           ))}
                       </div>
 
@@ -455,8 +559,20 @@ export default function GamePlayPage() {
                           .map((answer, index) => {
                             const actualIndex = index + Math.ceil(gameData.currentQuestion.answers.length / 2)
                             return (
-                              <div
-                                key={actualIndex}
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ 
+                                  duration: 0.5, 
+                                  delay: 0.4 + (index * 0.1), // Staggered delay based on index
+                                  ease: [0.16, 1, 0.3, 1], // Custom ease for a snappy pop-in
+                                  scale: {
+                                    type: "spring",
+                                    damping: 10,
+                                    stiffness: 200
+                                  }
+                                }}
                                 className={`relative overflow-hidden transition-all duration-700 ${gameData.revealedAnswers[actualIndex] ? 'flip-in' : ''}`}
                                 style={{
                                   borderRadius: '18px',
@@ -511,7 +627,10 @@ export default function GamePlayPage() {
                                     </span>
                                   </div>
                                   {gameData.revealedAnswers[actualIndex] && (
-                                    <div
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 50 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
                                       className="flex items-center justify-center "
                                       style={{
                                         width: 70,
@@ -525,10 +644,10 @@ export default function GamePlayPage() {
                                       <span className="text-2xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
                                         {answer.points * getPointMultiplier(gameData.currentRound)}
                                       </span>
-                                    </div>
+                                    </motion.div>
                                   )}
                                 </div>
-                              </div>
+                              </motion.div>
                             )
                           })}
                       </div>
@@ -536,7 +655,7 @@ export default function GamePlayPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </>
         )}
 

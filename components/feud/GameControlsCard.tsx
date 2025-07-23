@@ -54,6 +54,13 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
   onStrike,
   onResetStrikes,
 }) => {
+  const playAwardPointsSound = () => {
+    setTimeout(() => {
+      const audio = new Audio('/sounds/tally-sound.mp3');
+      audio.play().catch(e => console.error("Audio play failed:", e));
+    }, 1500);
+  };
+
   const overallScore = currentTeam === 'team1' ? team1Score : (team2Score ?? 0)
 
   return (
@@ -73,7 +80,7 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
               <CountUpAnimation
                 end={roundScore + animatingScore}
                 start={roundScore}
-                duration={2000}
+                duration={1000}
                 className="text-blue-300"
               />
             ) : (
@@ -149,7 +156,10 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
             </Badge>
             <Button
               size="sm"
-              onClick={nextRound}
+              onClick={() => {
+                nextRound();
+                changeGameState('round-start');
+              }}
               disabled={currentRound === "tiebreaker"}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -159,11 +169,20 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
         </div>
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-2">
-          <Button onClick={onStrike} variant="destructive" size="sm">
+          <Button
+            onClick={() => {
+              // Play strike sound
+              const audio = new Audio('/sounds/Wrong_Answer.mp3');
+              audio.play().catch(e => console.error("Audio play failed:", e));
+              if (onStrike) onStrike();
+            }}
+            variant="destructive"
+            size="sm"
+          >
             <X className="w-4 h-4 mr-1" />
             Strike ({strikes}/3)
           </Button>
-          <Button onClick={awardPoints} className="bg-green-600 hover:bg-green-700" size="sm">
+          <Button onClick={() => { awardPoints(); playAwardPointsSound(); }} className="bg-green-600 hover:bg-green-700" size="sm">
             Award Points
           </Button>
           <Button onClick={onResetStrikes} className="bg-gray-600 hover:bg-gray-700" size="sm">

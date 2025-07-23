@@ -88,7 +88,7 @@ const TeamScoresCard: React.FC<TeamScoresCardProps> = ({
                   <CountUpAnimation
                     end={team1Score + animatingScore}
                     start={team1Score}
-                    duration={2000}
+                    duration={1000}
                     className="text-green-400"
                   />
                 ) : (
@@ -119,7 +119,7 @@ const TeamScoresCard: React.FC<TeamScoresCardProps> = ({
                   <CountUpAnimation
                     end={team2Score + animatingScore}
                     start={team2Score}
-                    duration={2000}
+                    duration={1000}
                     className="text-green-400"
                   />
                 ) : (

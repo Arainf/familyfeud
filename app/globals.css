@@ -98,6 +98,7 @@
   }
 }
 
+
 /* Custom animations */
 @keyframes float {
   0%,
@@ -148,10 +149,10 @@
 
 @keyframes scaleUp {
   0%{
-    transform: scale(1);
+    transform: scale(.8);
   }
   100% {
-    transform: scale(1.5);
+    transform: scale(1.2);
   }
 }
 .animate-scale-up {

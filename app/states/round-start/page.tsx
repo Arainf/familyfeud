@@ -5,7 +5,10 @@ import ConnectionStatus from "@/components/ConnectionStatus";
 
 
 
+import { useRouter } from "next/navigation";
+
 export default function RoundStartPage() {
+  const router = useRouter();
   const [roundNumber, setRoundNumber] = useState(1);
   
 
@@ -27,6 +30,32 @@ export default function RoundStartPage() {
     const interval = setInterval(loadGameState, 100)
     return () => clearInterval(interval)
   }, []);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel("feud-game-state");
+    const gameStateRoutes = {
+      idle: "/states/idle",
+      "tournament-start": "/states/tournament-start",
+      "bracket-show": "/states/bracket-show",
+      "team-vs": "/states/team-vs",
+      "round-start": "/states/round-start",
+      "game-play": "/states/game-play",
+      "pass-or-play": "/states/pass-or-play",
+      "round-end-reveal": "/states/round-end-reveal",
+      "post-round-scoring": "/states/post-round-scoring",
+      "match-winner": "/states/match-winner",
+      "bracket-update": "/states/bracket-update",
+      "tournament-winner": "/states/tournament-winner",
+    };
+    channel.onmessage = (event) => {
+      const { gameState } = event.data;
+      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      if (window.location.pathname !== targetPath) {
+        router.replace(targetPath);
+      }
+    };
+    return () => channel.close();
+  }, [router]);
  
 
   return (

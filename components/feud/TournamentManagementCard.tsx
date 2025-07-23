@@ -69,6 +69,44 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
             </Button>
           </div>
 
+          {/* 3-Team Bracket Explanation */}
+          <div className="mb-6">
+            <h4 className="text-white font-medium mb-2">Bracket Format</h4>
+            <div className="bg-gray-800/70 rounded-lg p-4 mb-2">
+              <div className="font-mono text-xs text-gray-200 whitespace-pre leading-5">
+                {`Scenario 1: (If a team wins 2 consecutive matches)
+
+                  Match 1: Team 1 ─┐
+                                  ├─ Winner M1 ─┐
+                  Match 2: Team 2 ─┘           │
+                                              ├─ Winner M2 (Champion)
+                  Match 3: Team 3 ─────────────┘
+
+                  Ranking:
+                    1st: Winner M2
+                    2nd: Winner M1 (if lost M2)
+                    3rd: Loser M3
+
+                Scenario 2: (If the winner of Match 1 loses in Match 2)
+
+                  Match 1: Team 1 ─┐
+                                  ├─ Winner M1 ─┐
+                  Match 2: Team 2 ─┘           │
+                                              ├─ Winner M3 (Champion)
+                  Match 3: Team 3 ─────────────┘
+
+                  Ranking:
+                    1st: Winner M3
+                    2nd: Winner M2
+                    3rd: Loser M1
+                `}
+              </div>
+              <div className="mt-2 text-xs text-gray-300">
+                <strong>Clarification:</strong> The bracket ensures each team plays at least once, and the final match determines the 2nd and 3rd place if the first match winner loses in the second round. Rankings are based on the outcomes as shown above.
+              </div>
+            </div>
+          </div>
+
           {/* All Matches List */}
           <div className="mt-4">
             <h4 className="text-white font-medium mb-2">Matches</h4>
