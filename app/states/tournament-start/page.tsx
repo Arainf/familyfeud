@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface GameData {
   tournament?: {
-    name: string
-    teams: any[]
-  }
+    name: string;
+    teams: any[];
+  };
 }
 
 export default function TournamentStartPage() {
   const router = useRouter();
-  const [gameData, setGameData] = useState<GameData | null>(null)
+  const [gameData, setGameData] = useState<GameData | null>(null);
 
   useEffect(() => {
     const loadGameState = () => {
-      const saved = localStorage.getItem("familyFeudGameState")
+      const saved = localStorage.getItem("familyFeudGameState");
       if (saved) {
         try {
-          setGameData(JSON.parse(saved))
+          setGameData(JSON.parse(saved));
         } catch (error) {
-          console.error("Error parsing game state:", error)
+          console.error("Error parsing game state:", error);
         }
       }
-    }
+    };
 
-    loadGameState()
-    const interval = setInterval(loadGameState, 100)
-    return () => clearInterval(interval)
-  }, [])
+    loadGameState();
+    const interval = setInterval(loadGameState, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const channel = new BroadcastChannel("feud-game-state");
@@ -49,7 +49,9 @@ export default function TournamentStartPage() {
     };
     channel.onmessage = (event) => {
       const { gameState } = event.data;
-      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      const targetPath =
+        gameStateRoutes[gameState as keyof typeof gameStateRoutes] ||
+        "/states/idle";
       if (window.location.pathname !== targetPath) {
         router.replace(targetPath);
       }
@@ -104,7 +106,9 @@ export default function TournamentStartPage() {
               viewTransitionName: "tournament-info",
             }}
           >
-            <h3 className="text-2xl md:text-4xl font-bold text-white">{gameData.tournament.name}</h3>
+            <h3 className="text-2xl md:text-4xl font-bold text-white">
+              {gameData.tournament.name}
+            </h3>
             <p className="text-lg md:text-xl text-blue-200 mt-2">
               {gameData.tournament.teams?.length || 0} Teams Competing
             </p>
@@ -112,5 +116,5 @@ export default function TournamentStartPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
