@@ -1,20 +1,33 @@
 "use client";
 import { useEffect, useState } from "react";
 
+
+
 export default function RoundStartPage() {
   const [roundNumber, setRoundNumber] = useState(1);
+  
 
   useEffect(() => {
     // Function to update round number from localStorage
     const updateRound = () => {
-      const round = Number(localStorage.getItem("roundNumber") || 1);
-      setRoundNumber(round);
+      const gameState = localStorage.getItem("familyFeudGameState");
+      if (gameState) {
+        try {
+          const parsedState = JSON.parse(gameState);
+          const round = parsedState.currentRound;
+          // Convert tiebreaker to 5 for image display
+          setRoundNumber(round === "tiebreaker" ? 5 : round);
+        } catch (error) {
+          console.error("Error parsing game state:", error);
+        }
+      }
     };
+
     updateRound();
 
     // Listen for changes in localStorage (from other tabs/windows)
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "roundNumber") {
+      if (e.key === "familyFeudGameState") {
         updateRound();
       }
     };
@@ -33,7 +46,7 @@ export default function RoundStartPage() {
     <div
       className="min-h-screen w-full h-screen flex flex-row items-center justify-center overflow-hidden relative"
       style={{
-        backgroundImage: "url('/secondary-bg.webp')",
+        backgroundImage: "url('/game-screen.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

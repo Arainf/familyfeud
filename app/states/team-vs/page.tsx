@@ -107,7 +107,13 @@ export default function TeamVsPage() {
   const team2Colors = getColorClasses(gameData.team2Config.color)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen  flex items-center justify-center relative overflow-hidden"
+     style={{
+      backgroundImage: "url('/game-screen.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+    }}>
       {/* Animated background effects */}
       <div className="absolute inset-0">
         {Array.from({ length: 200 }).map((_, i) => (
@@ -124,31 +130,14 @@ export default function TeamVsPage() {
         ))}
       </div>
 
-      <div className="text-center z-10 w-full max-w-7xl mx-auto px-4">
-        {/* Small logo at top */}
-        <div className="mb-8">
-          <img
-            src="/family-feud-logo.png"
-            alt="Family Feud Logo"
-            className="w-24 h-24 md:w-32 md:h-32 mx-auto bg-transparent transition-all duration-700 ease-in-out"
-            style={{
-              viewTransitionName: "family-feud-logo",
-            }}
-          />
-        </div>
-
-        {/* VS Header */}
-        <div className="mb-12">
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-4 tracking-wider animate-pulse drop-shadow-2xl">
-            FACE OFF
-          </h1>
-        </div>
+      <div className="text-center z-10 w-full max-w-7xl mx-auto ">
 
         {/* Teams Display */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+        <div className="flex flex-row gap-96 justify-center align-middle">
+          
           {/* Team 1 */}
           <div
-            className={`${team1Colors.bg} p-8 md:p-12 rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-500 animate-pulse`}
+            className={`  h-auto w-auto `}
             style={{
               viewTransitionName: "team1-card",
             }}
@@ -158,25 +147,13 @@ export default function TeamVsPage() {
                 <img
                   src={gameData.team1Config.logo || "/placeholder.svg"}
                   alt="Team 1 Logo"
-                  className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full border-4 border-white mx-auto mb-4"
+                  className=" h-[500px] w-auto object-cover overflow-visible"
                   style={{
                     viewTransitionName: "team1-logo",
+                    
+                    
                   }}
                 />
-              )}
-              {React.createElement(getTeamIcon(gameData.team1Config.icon), {
-                className: "w-16 h-16 md:w-24 md:h-24 text-white mx-auto mb-4",
-              })}
-              <h2
-                className="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg"
-                style={{
-                  viewTransitionName: "team1-name",
-                }}
-              >
-                {gameData.team1Config.name}
-              </h2>
-              {gameData.team1Config.motto && (
-                <p className="text-lg md:text-xl text-yellow-200 italic">"{gameData.team1Config.motto}"</p>
               )}
             </div>
           </div>
@@ -184,18 +161,18 @@ export default function TeamVsPage() {
           {/* VS Symbol */}
           <div className="flex items-center justify-center">
             <div
-              className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 p-8 md:p-12 rounded-full shadow-2xl animate-bounce"
+              className=" h-auto w-auto  "
               style={{
                 viewTransitionName: "vs-symbol",
               }}
             >
-              <span className="text-6xl md:text-8xl font-bold text-white drop-shadow-2xl">VS</span>
+              <img className="h-[300px] w-[400px] object-cover overflow-visible" src="/vs.png" alt="" />
             </div>
           </div>
 
           {/* Team 2 */}
           <div
-            className={`${team2Colors.bg} p-8 md:p-12 rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-500 animate-pulse`}
+            className={` h-auto w-auto `}
             style={{
               viewTransitionName: "team2-card",
             }}
@@ -205,36 +182,18 @@ export default function TeamVsPage() {
                 <img
                   src={gameData.team2Config.logo || "/placeholder.svg"}
                   alt="Team 2 Logo"
-                  className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full border-4 border-white mx-auto mb-4"
+                  className=" h-[500px] w-auto object-cover overflow-visible"
                   style={{
                     viewTransitionName: "team2-logo",
                   }}
                 />
               )}
-              {React.createElement(getTeamIcon(gameData.team2Config.icon), {
-                className: "w-16 h-16 md:w-24 md:h-24 text-white mx-auto mb-4",
-              })}
-              <h2
-                className="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg"
-                style={{
-                  viewTransitionName: "team2-name",
-                }}
-              >
-                {gameData.team2Config.name}
-              </h2>
-              {gameData.team2Config.motto && (
-                <p className="text-lg md:text-xl text-yellow-200 italic">"{gameData.team2Config.motto}"</p>
-              )}
+              
             </div>
           </div>
         </div>
 
-        {/* Get Ready Message */}
-        <div className="mt-12">
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6 rounded-3xl shadow-2xl animate-pulse">
-            <h3 className="text-2xl md:text-4xl font-bold text-white">GET READY TO PLAY!</h3>
-          </div>
-        </div>
+      
       </div>
     </div>
   )

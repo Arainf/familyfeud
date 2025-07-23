@@ -334,7 +334,7 @@ export default function FamilyFeudViewer() {
             <img
               src="/family-feud-logo.png"
               alt="Family Feud Logo"
-              className="w-2xl h-2xl md:w-96 md:h-96 lg:w-[500px] lg:h-[500px] mx-auto bg-transparent"
+              className=" lg:w-[700px] lg:h-[700px] mx-auto bg-transparent"
             />
           </div>
         </div>

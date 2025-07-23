@@ -159,7 +159,7 @@ const GameControlsCard: React.FC<GameControlsCardProps> = ({
         </div>
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-2">
-          <Button onClick={() => { setStrikes((prev) => Math.min(3, prev + 1)); if (onStrike) onStrike(); }} variant="destructive" size="sm">
+          <Button onClick={onStrike} variant="destructive" size="sm">
             <X className="w-4 h-4 mr-1" />
             Strike ({strikes}/3)
           </Button>

@@ -810,42 +810,36 @@ export default function FamilyFeudControl() {
   const handleStrike = () => {
     setStrikes((prev) => {
       const newStrikes = Math.min(3, prev + 1);
-      if (newStrikes === 3 && !stealActive) {
-        // Trigger steal overlay for the other team
-        const otherTeam = currentTeam === 'team1' ? 'team2' : 'team1';
-        setStealActive(true);
-        setStealTeam(otherTeam);
-        localStorage.setItem('showStealOverlay', 'true');
-        localStorage.setItem('stealTeam', otherTeam);
-      }
+    
+        localStorage.setItem('showStrikeOverlay', 'true');
+
       return newStrikes;
     });
   };
 
   // Listen for steal overlay result (from game-play page)
-  useEffect(() => {
-    const handleStorage = () => {
-      if (stealActive && localStorage.getItem('showStealOverlay') === 'false') {
-        // Steal overlay closed, check result
-        const stealResult = localStorage.getItem('stealResult');
-        if (stealResult === 'success') {
-          // Stealing team gets the roundScore
-          if (stealTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
-          else setTeam2Score((prev) => prev + roundScore);
-        } else if (stealResult === 'fail') {
-          // Original team keeps the roundScore
-          if (currentTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
-          else setTeam2Score((prev) => prev + roundScore);
-        }
-        setRoundScore(0);
-        setStrikes(0);
-        setStealActive(false);
-        localStorage.removeItem('stealResult');
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [stealActive, stealTeam, currentTeam, roundScore]);
+  // useEffect(() => {
+  //   const handleStorage = () => {
+  //     if (stealActive && localStorage.getItem('showStealOverlay') === 'false') {
+  //       // Steal overlay closed, check result
+  //       const stealResult = localStorage.getItem('stealResult');
+  //       if (stealResult === 'success') {
+  //         // Stealing team gets the roundScore
+  //         if (stealTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
+  //         else setTeam2Score((prev) => prev + roundScore);
+  //       } else if (stealResult === 'fail') {
+  //         // Original team keeps the roundScore
+  //         if (currentTeam === 'team1') setTeam1Score((prev) => prev + roundScore);
+  //         else setTeam2Score((prev) => prev + roundScore);
+  //       }
+  //       setRoundScore(0);
+  //       setStrikes(0);
+  
+  //     }
+  //   };
+  //   window.addEventListener('storage', handleStorage);
+  //   return () => window.removeEventListener('storage', handleStorage);
+  // }, [stealActive, stealTeam, currentTeam, roundScore]);
 
   // Auth dialog
   if (!user) {

@@ -170,7 +170,7 @@ export default function GamePlayPage() {
   return (
     <div className="min-h-screen relative overflow-hidden"
     style={{
-      backgroundImage: "url('/secondary-bg.webp')",
+      backgroundImage: "url('/game-screen.png')",
       backgroundSize: "cover",
       backgroundPosition: "center",
       backgroundRepeat: "no-repeat",
@@ -179,62 +179,14 @@ export default function GamePlayPage() {
       {/* Cumulative Scores (top left/right) */}
       {showPassOrPlayOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="text-center animate-pulse">
-            <h1 className="text-6xl md:text-8xl font-extrabold text-yellow-400 drop-shadow-2xl mb-8">PASS OR PLAY</h1>
+          <div className="text-center flex flex-col justify-center align-middle items-center animate-pulse">
+            <img src="/play.png" alt="" />
+            <img src="/or.png" alt="" className="w-40" />
+            <img src="/pass.png" alt="" />
           </div>
         </div>
       )}
-      {showStealOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-center max-w-md w-full">
-            <h2 className="text-3xl font-bold text-yellow-400 mb-4">
-              {stealTeam === 'team1' ? 'Team 1' : 'Team 2'}: STEAL!
-            </h2>
-            <input
-              type="text"
-              value={stealAnswer}
-              onChange={e => setStealAnswer(e.target.value)}
-              className="w-full p-2 rounded mb-4 text-black"
-              placeholder="Enter your steal answer"
-            />
-            <button
-              className="bg-blue-600 text-white px-6 py-2 rounded font-bold"
-              onClick={() => {
-                if (!gameData || !gameData.currentQuestion) return;
-                const normalized = (s: string) => s.trim().toLowerCase();
-                const alreadyRevealed = gameData.currentQuestion.answers.find((a, i) => normalized(a.text) === normalized(stealAnswer) && gameData.revealedAnswers[i]);
-                const found = gameData.currentQuestion.answers.find((a, i) => normalized(a.text) === normalized(stealAnswer) && !gameData.revealedAnswers[i]);
-                if (found && !alreadyRevealed) {
-                  setStealResult('success');
-                  localStorage.setItem('stealResult', 'success');
-                  setTimeout(() => {
-                    setShowStealOverlay(false);
-                    localStorage.setItem('showStealOverlay', 'false');
-                    setStealResult(null);
-                    setStealAnswer("");
-                  }, 1500);
-                } else {
-                  setStealResult('fail');
-                  localStorage.setItem('stealResult', 'fail');
-                  setTimeout(() => {
-                    setShowStealOverlay(false);
-                    localStorage.setItem('showStealOverlay', 'false');
-                    setStealResult(null);
-                    setStealAnswer("");
-                  }, 1500);
-                }
-              }}
-            >
-              Submit Steal
-            </button>
-            {stealResult && (
-              <div className={`mt-4 text-lg font-bold ${stealResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                {stealResult === 'success' ? 'Correct! Points stolen!' : 'Incorrect. No steal.'}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+  
       {stealVisual && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-out">
           {/* Replace the text below with an <img src="/steal.png" ... /> if you want an image */}
@@ -283,7 +235,9 @@ export default function GamePlayPage() {
       {showStrikeOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="text-center animate-pulse">
-            <span className="text-red-500 text-[180px] md:text-[300px] font-extrabold drop-shadow-2xl">✖</span>
+            <span className="text-red-500 text-[180px] md:text-[300px] font-extrabold tracking-tight drop-shadow-2xl">
+              {"X".repeat(gameData?.strikes || 0)}
+            </span>
           </div>
         </div>
       )}
@@ -589,22 +543,40 @@ export default function GamePlayPage() {
         {/* Strikes display */}
         <div className="text-center pb-8">
           <div
-            className="inline-flex gap-4 md:gap-6 bg-gradient-to-r from-red-600 to-red-800 px-8 md:px-12 py-4 md:py-6 rounded-3xl shadow-2xl"
+            className="inline-flex justify-center items-center gap-[35px] px-8 md:px-12 py-4 md:py-6 rounded-3xl "
             style={{
               viewTransitionName: "strikes-display",
             }}
           >
             {[0, 1, 2].map((i) => (
-              <div key={i} className="relative">
-                <X
-                  className={`w-16 h-16 md:w-20 md:h-20 ${
-                    i < gameData.strikes ? "text-yellow-300 animate-pulse" : "text-red-900"
+              <div key={i} className="relative" style={{ borderRadius: '10px', border: '3px solid rgba(121, 209, 255, 0.30)'}}>
+                <svg 
+                  className={`${i < gameData.strikes ? "text-red-500 " : ""} transition-all duration-500`}
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="56" 
+                  height="52" 
+                  viewBox="0 0 56 52" 
+                  fill="none"
+                >
+                  <rect x="-0.265625" y="-13.0806" width="94.505" height="17.3212" transform="rotate(43.8845 -0.265625 -13.0806)" fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"} fill-opacity="0.3"/>
+                  <rect width="94.505" height="17.3212" transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)" fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"} fill-opacity="0.3"/>
+                </svg>
+                {/* <X
+                  className={`${
+                    i < gameData.strikes ? "text-red-500 animate-pulse" : ""
                   } transition-all duration-500`}
                   strokeWidth={8}
-                />
-                {i < gameData.strikes && (
-                  <div className="absolute inset-0 bg-yellow-300 rounded-full animate-ping opacity-40" />
-                )}
+                  style={{
+                    display: "flex",
+                    width: "55.583px",
+                    height: "51.834px",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "1.293px",
+                    borderRadius: "2.585px",
+                    border: "2.585px solid rgba(121, 209, 255, 0.30)"
+                  }}
+                /> */}
               </div>
             ))}
           </div>

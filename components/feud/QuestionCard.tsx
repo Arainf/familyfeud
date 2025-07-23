@@ -26,7 +26,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   currentTeam,
 }) => {
   const [showAll, setShowAll] = useState(false);
-  const revealSound = useRef(typeof Audio !== 'undefined' ? new Audio('/sounds/reveal.mp3') : null);
+  const revealSound = useRef(typeof Audio !== 'undefined' ? new Audio('/sounds/Correct_Answer.mp3') : null);
 
   const playSound = () => {
     if (revealSound.current) {

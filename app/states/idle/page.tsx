@@ -72,7 +72,7 @@ export default function IdlePage() {
       <img
         src="/logo.gif"
         alt="Family Feud Logo"
-        className="w-[600px] max-w-full mx-auto drop-shadow-2xl z-10"
+        className="w-[950px] max-w-full mx-auto drop-shadow-2xl z-10"
         style={{ viewTransitionName: "family-feud-logo" }}
       />
     </div>
