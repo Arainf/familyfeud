@@ -336,7 +336,7 @@ export default function GamePlayPage() {
                 color: '#000',
                 textAlign: 'center',
                 fontFamily: 'Mozaic GEO, sans-serif',
-                fontSize: 30,
+                fontSize: 50,
                 fontStyle: 'normal',
                 fontWeight: 690,
                 lineHeight: 'normal',
@@ -558,25 +558,10 @@ export default function GamePlayPage() {
                   viewBox="0 0 56 52" 
                   fill="none"
                 >
-                  <rect x="-0.265625" y="-13.0806" width="94.505" height="17.3212" transform="rotate(43.8845 -0.265625 -13.0806)" fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"} fill-opacity="0.3"/>
-                  <rect width="94.505" height="17.3212" transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)" fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"} fill-opacity="0.3"/>
+                  <rect x="-0.265625" y="-13.0806" width="94.505" height="17.3212" transform="rotate(43.8845 -0.265625 -13.0806)" fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"} fillOpacity="0.3"/>
+                  <rect width="94.505" height="17.3212" transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)" fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"} fillOpacity="0.3"/>
                 </svg>
-                {/* <X
-                  className={`${
-                    i < gameData.strikes ? "text-red-500 animate-pulse" : ""
-                  } transition-all duration-500`}
-                  strokeWidth={8}
-                  style={{
-                    display: "flex",
-                    width: "55.583px",
-                    height: "51.834px",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "1.293px",
-                    borderRadius: "2.585px",
-                    border: "2.585px solid rgba(121, 209, 255, 0.30)"
-                  }}
-                /> */}
+                
               </div>
             ))}
           </div>

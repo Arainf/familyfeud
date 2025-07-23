@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react"
 import { Crown, Star, Zap, Shield, Trophy, Target, Flame, Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import ConnectionStatus from "@/components/ConnectionStatus"
 
 interface TeamConfig {
   name: string
@@ -48,13 +50,20 @@ const getTeamIcon = (iconName: string) => {
 export default function TeamVsPage() {
   const router = useRouter();
   const [gameData, setGameData] = useState<GameData | null>(null)
+  const [animationComplete, setAnimationComplete] = useState(false)
 
   useEffect(() => {
     const loadGameState = () => {
       const saved = localStorage.getItem("familyFeudGameState")
       if (saved) {
         try {
-          setGameData(JSON.parse(saved))
+          const parsedData = JSON.parse(saved)
+          setGameData(parsedData)
+          
+          // Start animation sequence after a short delay
+          setTimeout(() => {
+            setAnimationComplete(true)
+          }, 500)
         } catch (error) {
           console.error("Error parsing game state:", error)
         }
@@ -130,71 +139,178 @@ export default function TeamVsPage() {
         ))}
       </div>
 
-      <div className="text-center z-10 w-full max-w-7xl mx-auto ">
-
+      <div className="text-center z-10 w-full max-w-[90vw] mx-auto">
         {/* Teams Display */}
-        <div className="flex flex-row gap-96 justify-center align-middle">
-          
+        <div className="flex flex-row gap-8 md:gap-16 lg:gap-32 xl:gap-48 2xl:gap-64 justify-center items-center w-full px-4">
           {/* Team 1 */}
-          <div
-            className={`  h-auto w-auto `}
-            style={{
-              viewTransitionName: "team1-card",
-            }}
-          >
-            <div className="text-center">
-              {gameData.team1Config.logo && (
-                <img
-                  src={gameData.team1Config.logo || "/placeholder.svg"}
-                  alt="Team 1 Logo"
-                  className=" h-[500px] w-auto object-cover overflow-visible"
-                  style={{
-                    viewTransitionName: "team1-logo",
-                    
-                    
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* VS Symbol */}
-          <div className="flex items-center justify-center">
-            <div
-              className=" h-auto w-auto  "
+          <AnimatePresence>
+            <motion.div
+              initial={{ x: -1000, opacity: 0, rotateY: 180 }}
+              animate={animationComplete ? { 
+                x: 0, 
+                opacity: 1, 
+                rotateY: 0,
+                transition: { 
+                  type: "spring", 
+                  stiffness: 50,
+                  damping: 10,
+                  delay: 0.3
+                } 
+              } : {}}
+              className="h-auto w-auto origin-center"
               style={{
-                viewTransitionName: "vs-symbol",
+                viewTransitionName: "team1-card",
               }}
             >
-              <img className="h-[300px] w-[400px] object-cover overflow-visible" src="/vs.png" alt="" />
-            </div>
-          </div>
+              <div className="text-center relative">
+                {gameData.team1Config.logo ? (
+                  <motion.img
+                    src={gameData.team1Config.logo}
+                    alt="Team 1 Logo"
+                    className="h-[350px] w-[20vw] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={animationComplete ? { 
+                      scale: 1, 
+                      opacity: 1,
+                      transition: { 
+                        delay: 0.5,
+                        type: "spring",
+                        stiffness: 100
+                      } 
+                    } : {}}
+                    style={{
+                      viewTransitionName: "team1-logo",
+                      filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))',
+                    }}
+                  />
+                ) : (
+                  <div className="h-[300px] md:h-[400px] lg:h-[500px] w-[300px] md:w-[400px] lg:w-[500px] bg-gray-800 bg-opacity-50 rounded-lg flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white">Team 1</span>
+                  </div>
+                )}
+                
+                {/* Team Name */}
+                <motion.div 
+                  className="mt-4"
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={animationComplete ? { 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { 
+                      delay: 0.8,
+                      type: "spring"
+                    } 
+                  } : {}}
+                >
+                
+                </motion.div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* VS Symbol */}
+          <AnimatePresence>
+            <motion.div 
+              className="flex items-center justify-center z-10"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={animationComplete ? { 
+                scale: 1, 
+                opacity: 1,
+                transition: { 
+                  delay: 0.7,
+                  type: "tween",
+                  duration: 0.8,
+                  ease: [0.68, -0.55, 0.27, 1.55]
+                } 
+              } : {}}
+            >
+              <motion.div
+                className="h-auto w-[20vw] max-w-[1000px] md:max-w-[1000px] lg:max-w-[1000px] xl:max-w-[1000px]"
+                style={{
+                  viewTransitionName: "vs-symbol",
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img 
+                  className="w-full h-auto object-contain" 
+                  src="/vs.png" 
+                  alt="Versus" 
+                />
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
           {/* Team 2 */}
-          <div
-            className={` h-auto w-auto `}
-            style={{
-              viewTransitionName: "team2-card",
-            }}
-          >
-            <div className="text-center">
-              {gameData.team2Config.logo && (
-                <img
-                  src={gameData.team2Config.logo || "/placeholder.svg"}
-                  alt="Team 2 Logo"
-                  className=" h-[500px] w-auto object-cover overflow-visible"
-                  style={{
-                    viewTransitionName: "team2-logo",
-                  }}
-                />
-              )}
-              
-            </div>
-          </div>
+          <AnimatePresence>
+            <motion.div
+              initial={{ x: 1000, opacity: 0, rotateY: -180 }}
+              animate={animationComplete ? { 
+                x: 0, 
+                opacity: 1, 
+                rotateY: 0,
+                transition: { 
+                  type: "spring", 
+                  stiffness: 50,
+                  damping: 10,
+                  delay: 0.3
+                } 
+              } : {}}
+              className="h-auto w-auto origin-center"
+              style={{
+                viewTransitionName: "team2-card",
+              }}
+            >
+              <div className="text-center relative">
+                {gameData.team2Config.logo ? (
+                  <motion.img
+                    src={gameData.team2Config.logo}
+                    alt="Team 2 Logo"
+                    className="h-[350px] w-[20vw] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={animationComplete ? { 
+                      scale: 1, 
+                      opacity: 1,
+                      transition: { 
+                        delay: 0.5,
+                        type: "spring",
+                        stiffness: 100
+                      } 
+                    } : {}}
+                    style={{
+                      viewTransitionName: "team2-logo",
+                      filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.7))',
+                    }}
+                  />
+                ) : (
+                  <div className="h-[300px] md:h-[400px] lg:h-[500px] w-[300px] md:w-[400px] lg:w-[500px] bg-gray-800 bg-opacity-50 rounded-lg flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white">Team 2</span>
+                  </div>
+                )}
+                
+                {/* Team Name */}
+                <motion.div 
+                  className="mt-4"
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={animationComplete ? { 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { 
+                      delay: 0.8,
+                      type: "spring"
+                    } 
+                  } : {}}
+                >
+                 
+                </motion.div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
       
       </div>
+      <ConnectionStatus />
     </div>
   )
 }

@@ -113,7 +113,19 @@ const TeamScoresCard: React.FC<TeamScoresCardProps> = ({
           <div className={`bg-gray-800/50 rounded-lg p-4 ${currentTeam === 'team2' ? 'ring-2 ring-blue-500' : ''}`}>
             <div className="text-center">
               <div className="text-white font-medium mb-2">{team2Name}</div>
-              <div className="text-3xl font-bold text-white">{team2Score}</div>
+              {/* <div className="text-3xl font-bold text-white">{team2Score}</div> */}
+               <div className="text-3xl font-bold text-white">
+                {showScoreAnimation ? (
+                  <CountUpAnimation
+                    end={team2Score + animatingScore}
+                    start={team2Score}
+                    duration={2000}
+                    className="text-green-400"
+                  />
+                ) : (
+                  team2Score
+                )}
+              </div>
               <div className="text-sm text-gray-400 mt-1">Overall Score</div>
               <div className="text-xl font-bold text-yellow-400 mt-2">+{currentTeam === 'team2' ? roundScore : 0}</div>
               <div className="text-xs text-gray-400">Current Round</div>

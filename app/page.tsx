@@ -192,8 +192,8 @@ interface TeamConfig {
   name: string
   primaryColor: string
   secondaryColor: string
-  icon: string
-  iconUrl?: string
+  boxImage: string
+  boxImageUrl?: string
   logo?: string
   motto?: string
 }
@@ -255,14 +255,14 @@ export default function FamilyFeudControl() {
       name: "Team 1",
       primaryColor: "#ef4444",
       secondaryColor: "#dc2626",
-      icon: "crown",
+      boxImage: "crown",
       motto: "Champions in the making!",
     },
     {
       name: "Team 2",
       primaryColor: "#3b82f6",
       secondaryColor: "#2563eb",
-      icon: "star",
+      boxImage: "star",
       motto: "Ready to dominate!",
     },
   ])
@@ -363,19 +363,19 @@ export default function FamilyFeudControl() {
         team1Score,
         team2Score,
         roundScore,
-        currentTeam: "team1",
+        currentTeam,
         strikes,
         team1Config: {
           name: currentTournament.teams[0]?.name || "Team 1",
           color: currentTournament.teams[0]?.primaryColor?.replace("#", "") || "red",
-          icon: currentTournament.teams[0]?.icon || "crown",
+          icon: currentTournament.teams[0]?.boxImage || "crown",
           logo: currentTournament.teams[0]?.logo,
           motto: currentTournament.teams[0]?.motto,
         },
         team2Config: {
           name: currentTournament.teams[1]?.name || "Team 2",
           color: currentTournament.teams[1]?.primaryColor?.replace("#", "") || "blue",
-          icon: currentTournament.teams[1]?.icon || "star",
+          icon: currentTournament.teams[1]?.boxImage || "star",
           logo: currentTournament.teams[1]?.logo,
           motto: currentTournament.teams[1]?.motto,
         },
@@ -527,7 +527,7 @@ export default function FamilyFeudControl() {
       name: `Team ${tournamentTeams.length + 1}`,
       primaryColor: teamColors[tournamentTeams.length % teamColors.length].hex,
       secondaryColor: teamColors[(tournamentTeams.length + 1) % teamColors.length].hex,
-      icon: teamIcons[tournamentTeams.length % teamIcons.length].value,
+      boxImage: teamIcons[tournamentTeams.length % teamIcons.length].value,
       motto: "Ready to compete!",
     }
     setTournamentTeams([...tournamentTeams, newTeam])
@@ -919,7 +919,14 @@ export default function FamilyFeudControl() {
               setCurrentGameState('game-play')
               localStorage.setItem('showPassOrPlayOverlay', 'false')
             }}
-            onSwitchTeam={() => setCurrentTeam((prev) => (prev === 'team1' ? 'team2' : 'team1'))}
+            onSwitchTeam={() => {
+              setCurrentTeam((prev) => {
+                const newTeam = prev === 'team1' ? 'team2' : 'team1';
+                localStorage.setItem('currentTeam', newTeam);
+                return newTeam;
+              });
+            }}
+            
             onActivatePassOrPlay={() => {
               setShowPlayPass(true)
               localStorage.setItem('showPassOrPlayOverlay', 'true')

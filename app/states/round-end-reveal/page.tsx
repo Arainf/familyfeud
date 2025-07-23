@@ -1,14 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CountUpAnimation from "@/components/CountUpAnimation";
 
 export default function RoundEndRevealPage() {
   const router = useRouter();
   const [roundWinner, setRoundWinner] = useState("");
-  const [roundPoints, setRoundPoints] = useState("");
+  const [roundPoints, setRoundPoints] = useState(0);
   const [currentRound, setCurrentRound] = useState(1);
   const [team1Score, setTeam1Score] = useState(0);
   const [team2Score, setTeam2Score] = useState(0);
+  const [showScoreAnimation, setShowScoreAnimation] = useState(false);
+  const [animatingScore, setAnimatingScore] = useState(0);
 
   useEffect(() => {
     // Function to update current round, points, and score from localStorage
@@ -18,13 +21,14 @@ export default function RoundEndRevealPage() {
       if (gameStateRaw) {
         try {
           gameState = JSON.parse(gameStateRaw);
+    
         } catch (e) {
           gameState = {};
         }
       }
       setCurrentRound(Number(gameState.currentRound) || 1);
-      setRoundWinner(localStorage.getItem("roundWinner") || "");
-      setRoundPoints(localStorage.getItem("roundPoints") || "");
+      setRoundWinner(localStorage.getItem("currentTeam")|| "");
+      setRoundPoints(Number(localStorage.getItem("roundPoints") || 0));
       setTeam1Score(Number(gameState.team1Score) || 0);
       setTeam2Score(Number(gameState.team2Score) || 0);
     };
@@ -35,7 +39,8 @@ export default function RoundEndRevealPage() {
       if (
         e.key === "familyFeudGameState" ||
         e.key === "roundWinner" ||
-        e.key === "roundPoints"
+        e.key === "roundPoints" ||
+        e.key === "currentTeam"
       ) {
         updateRoundAndPoints();
       }
@@ -59,52 +64,23 @@ export default function RoundEndRevealPage() {
   return (
     // Main page container
     <div className="min-h-screen flex  items-center justify-center bg-cover bg-[url('/secondary-bg.webp')]">
-      {/* Test buttons */}
-      <div className="fixed top-4 left-4 z-50 flex gap-2">
-        <button
-          onClick={() => {
-            setRoundWinner("Team 1");
-            localStorage.setItem("roundWinner", "Team 1");
-          }}
-          className="bg-blue-500 text-white p-2 rounded"
-        >
-          Team 1 Wins
-        </button>
-        <button
-          onClick={() => {
-            setRoundWinner("Team 2");
-            localStorage.setItem("roundWinner", "Team 2");
-          }}
-          className="bg-green-500 text-white p-2 rounded"
-        >
-          Team 2 Wins
-        </button>
-        <button
-          onClick={() => {
-            setRoundWinner("");
-            localStorage.setItem("roundWinner", "");
-          }}
-          className="bg-gray-500 text-white p-2 rounded"
-        >
-          Reset Winner
-        </button>
-      </div>
+     
       {/* Main content grid */}
       <div className="w-screen h-screen   grid grid-rows-[2fr_1fr]">
         {/* Top row: Two SVG containers with animated score */}
         <div className="w-full h-full flex   items-center justify-center gap-x-18 relative">
           {/* Nao SVG + Score Container */}
           <div
-            className={`w-[42rem] relative h-[35rem] flex flex-col items-end justify-center ${
-              roundWinner === "Team 1" ? "animate-scale-up" : ""
+            className={`w-[42rem] relative h-[35rem] flex flex-col  transition-all ease-in-out items-end justify-center ${
+              roundWinner === "team1" ? "scale-125" : "scale-95"
             }`}
           >
             {/* Nao SVG Wrapper */}
-            <div className="relative  flex items-center justify-center">
+            <div className="relative  flex items-end align-middle justify-center">
               <img src="/nao.svg" alt="Nao" className="h-full w-full" />
               <span
-                className={`absolute inset-0 flex items-end pb-6 justify-center w-full h-full text-[100px] drop-shadow-2xl ${
-                  roundWinner === "Team 1" ? "animate-scale-up-text" : ""
+                className={`absolute inset-0 flex items-end pb-6 scale-95 transition-all ease-in-out justify-center w-full h-full text-[100px] drop-shadow-2xl text-shadow-lg ${
+                  roundWinner === "team1" ? "scale-110" : "scale-95"
                 }`}
                 style={{
                   fontFamily: "Mozaic GEO",
@@ -112,22 +88,31 @@ export default function RoundEndRevealPage() {
                   color: "#fff",
                 }}
               >
-                {String(team1Score).padStart(3, "0")}
+                  {showScoreAnimation ? (
+                    <CountUpAnimation
+                      end={team1Score + (roundWinner === "team1" ? roundPoints : 0)}
+                      start={team1Score}
+                      duration={2000}
+                      className="text-green-400"
+                    />
+                  ) : (
+                    String(team1Score).padStart(3, "0")
+                  )}
               </span>
             </div>
           </div>
           {/* Siteao SVG + Score Container */}
           <div
-            className={`w-[40rem] flex flex-col items-center justify-center ${
-              roundWinner === "Team 2" ? "animate-scale-up" : ""
+            className={`w-[40rem] flex flex-col items-center  transition-all ease-in-out justify-center ${
+              roundWinner === "team2" ? "scale-125" : "scale-95"
             }`}
           >
             {/* Siteao SVG Wrapper */}
-            <div className="relative flex items- justify-center">
+            <div className="relative flex  items-end align-middle justify-center">
               <img src="/siteao.svg" alt="Siteao" className="h-auto w-full" />
               <span
-                className={`absolute inset-0 flex items-end pb-8 justify-center w-full h-full text-[100px] drop-shadow-2xl ${
-                  roundWinner === "Team 2" ? "animate-scale-up-text" : ""
+                className={`absolute inset-0 flex items-end pb-8  scale-95 transition-all ease-in-out justify-center w-full h-full text-[100px] drop-shadow-2xl  text-shadow-lg ${
+                  roundWinner === "team2" ? "scale-110" : "scale-95"
                 }`}
                 style={{
                   fontFamily: "Mozaic GEO",

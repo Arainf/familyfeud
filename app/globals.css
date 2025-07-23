@@ -147,29 +147,27 @@
 }
 
 @keyframes scaleUp {
-  0%,
-  100% {
+  0%{
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.08);
+  100% {
+    transform: scale(1.5);
   }
 }
 .animate-scale-up {
-  animation: scaleUp 2s ease-in-out infinite;
+  animation: scaleUp 2s ease-in-out ;
 }
 
 @keyframes scaleUpText {
-  0%,
-  100% {
+  0%{
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.08);
+  100% {
+    transform: scale(1.5);
   }
 }
 .animate-scale-up-text {
-  animation: scaleUpText 2s ease-in-out infinite;
+  animation: scaleUpText 2s ease-in-out;
 }
 
 /* View Transitions */
