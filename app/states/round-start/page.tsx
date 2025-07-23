@@ -8,39 +8,24 @@ export default function RoundStartPage() {
   
 
   useEffect(() => {
-    // Function to update round number from localStorage
-    const updateRound = () => {
-      const gameState = localStorage.getItem("familyFeudGameState");
-      if (gameState) {
+    const loadGameState = () => {
+      const saved = localStorage.getItem("familyFeudGameState")
+      if (saved) {
         try {
-          const parsedState = JSON.parse(gameState);
-          const round = parsedState.currentRound;
+          const parsed = JSON.parse(saved)
           // Convert tiebreaker to 5 for image display
-          setRoundNumber(round === "tiebreaker" ? 5 : round);
+          setRoundNumber(parsed.currentRound === "tiebreaker" ? 5 : parsed.currentRound)
         } catch (error) {
-          console.error("Error parsing game state:", error);
+          console.error("Error parsing game state:", error)
         }
       }
-    };
+    }
 
-    updateRound();
-
-    // Listen for changes in localStorage (from other tabs/windows)
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "familyFeudGameState") {
-        updateRound();
-      }
-    };
-    window.addEventListener("storage", onStorage);
-
-    // Poll for changes in the same tab
-    const interval = setInterval(updateRound, 200);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      clearInterval(interval);
-    };
+    loadGameState()
+    const interval = setInterval(loadGameState, 100)
+    return () => clearInterval(interval)
   }, []);
+ 
 
   return (
     <div
