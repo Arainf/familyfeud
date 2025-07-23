@@ -67,6 +67,24 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
           Go to Game Play
         </Button>
       </div>
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <Button
+          onClick={() => changeGameState("match-winner")}
+          variant="outline"
+          size="sm"
+          className="border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
+        >
+          Match Winner
+        </Button>
+        <Button
+          onClick={() => changeGameState("grand-winner")}
+          variant="outline"
+          size="sm"
+          className="border-gray-700 text-white hover:bg-gray-800 bg-slate-600"
+        >
+          Grand Winner
+        </Button>
+      </div>
     </CardContent>
   </Card>
 )

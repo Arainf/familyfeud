@@ -100,6 +100,7 @@ export default function RoundEndRevealPage() {
       "match-winner": "/states/match-winner",
       "bracket-update": "/states/bracket-update",
       "tournament-winner": "/states/tournament-winner",
+      "grand-winner": "/states/grand-winner",
     };
     channel.onmessage = (event) => {
       const { gameState } = event.data;

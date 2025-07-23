@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface TeamConfig {
-  name: string
-  color1: string
-  color2: string
-  icon: string
-  logo?: string
-  motto?: string
+  name: string;
+  color1: string;
+  color2: string;
+  icon: string;
+  logo?: string;
+  motto?: string;
 }
 
 interface Question {
-  question: string
-  answers: { text: string; points: number }[]
+  question: string;
+  answers: { text: string; points: number }[];
 }
 
 interface GameData {
-  currentRound: 1 | 2 | 3 | 4 | "tiebreaker"
-  team1Config: TeamConfig
-  team2Config: TeamConfig
-  team1Score: number
-  team2Score: number
-  strikes: number
-  showStrikeOverlay: boolean
-  currentQuestion: Question | null
-  revealedAnswers: boolean[]
-  roundScore?: number
-  currentTeam?: 'team1' | 'team2'
+  currentRound: 1 | 2 | 3 | 4 | "tiebreaker";
+  team1Config: TeamConfig;
+  team2Config: TeamConfig;
+  team1Score: number;
+  team2Score: number;
+  strikes: number;
+  showStrikeOverlay: boolean;
+  currentQuestion: Question | null;
+  revealedAnswers: boolean[];
+  roundScore?: number;
+  currentTeam?: "team1" | "team2";
 }
 
 const roundNames = {
@@ -39,24 +39,24 @@ const roundNames = {
   3: "Round 3 - Triple Points",
   4: "Round 4 - Triple Points",
   tiebreaker: "Tie Breaker",
-}
+};
 
 const getPointMultiplier = (round: 1 | 2 | 3 | 4 | "tiebreaker"): number => {
   switch (round) {
     case 1:
-      return 1
+      return 1;
     case 2:
-      return 2
+      return 2;
     case 3:
-      return 3
+      return 3;
     case 4:
-      return 3
+      return 3;
     case "tiebreaker":
-      return 1
+      return 1;
     default:
-      return 1
+      return 1;
   }
-}
+};
 
 const getColorClasses = (color: string) => {
   const colorMap: { [key: string]: { bg: string } } = {
@@ -68,65 +68,83 @@ const getColorClasses = (color: string) => {
     pink: { bg: "bg-pink-600" },
     cyan: { bg: "bg-cyan-600" },
     yellow: { bg: "bg-yellow-600" },
-  }
-  return colorMap[color] || colorMap.blue
-}
+  };
+  return colorMap[color] || colorMap.blue;
+};
 
 export default function GamePlayPage() {
   const router = useRouter();
-  const [gameData, setGameData] = useState<GameData | null>(null)
-  const [showPassOrPlayOverlay, setShowPassOrPlayOverlay] = useState(false)
-  const [passOrPlayChoice, setPassOrPlayChoice] = useState<"play" | "pass" | null>(null)
-  const [passOrPlayOverlayVisible, setPassOrPlayOverlayVisible] = useState(false)
-  const [showStrikeOverlay, setShowStrikeOverlay] = useState(false)
+  const [gameData, setGameData] = useState<GameData | null>(null);
+  const [showPassOrPlayOverlay, setShowPassOrPlayOverlay] = useState(false);
+  const [passOrPlayChoice, setPassOrPlayChoice] = useState<
+    "play" | "pass" | null
+  >(null);
+  const [passOrPlayOverlayVisible, setPassOrPlayOverlayVisible] =
+    useState(false);
+  const [showStrikeOverlay, setShowStrikeOverlay] = useState(false);
   const [showStealOverlay, setShowStealOverlay] = useState(false);
   const [stealVisual, setStealVisual] = useState(false);
   const [showRoundSummary, setShowRoundSummary] = useState(false);
-  const [roundWinner, setRoundWinner] = useState('');
-  const [roundPoints, setRoundPoints] = useState('');
-  const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
+  const [roundWinner, setRoundWinner] = useState("");
+  const [roundPoints, setRoundPoints] = useState("");
+  const [stealTeam, setStealTeam] = useState<"team1" | "team2">("team2");
   const [stealAnswer, setStealAnswer] = useState("");
-  const [stealResult, setStealResult] = useState<'success' | 'fail' | null>(null);
+  const [stealResult, setStealResult] = useState<"success" | "fail" | null>(
+    null
+  );
 
   useEffect(() => {
     const loadGameState = () => {
-      const saved = localStorage.getItem("familyFeudGameState")
+      const saved = localStorage.getItem("familyFeudGameState");
       if (saved) {
         try {
-          const parsed = JSON.parse(saved)
-          setGameData(parsed)
-          setShowPassOrPlayOverlay(localStorage.getItem('showPassOrPlayOverlay') === 'true')
-          if (localStorage.getItem('showStrikeOverlay') === 'true') {
-            setShowStrikeOverlay(true)
+          const parsed = JSON.parse(saved);
+          setGameData(parsed);
+          setShowPassOrPlayOverlay(
+            localStorage.getItem("showPassOrPlayOverlay") === "true"
+          );
+          if (localStorage.getItem("showStrikeOverlay") === "true") {
+            setShowStrikeOverlay(true);
             setTimeout(() => {
-              setShowStrikeOverlay(false)
-              localStorage.setItem('showStrikeOverlay', 'false')
-            }, 1200)
+              setShowStrikeOverlay(false);
+              localStorage.setItem("showStrikeOverlay", "false");
+            }, 1200);
           }
-          setPassOrPlayChoice(localStorage.getItem('passOrPlayChoice') as 'play' | 'pass' || null)
-          setShowStealOverlay(localStorage.getItem('showStealOverlay') === 'true');
-          setStealTeam((localStorage.getItem('stealTeam') as 'team1' | 'team2') || 'team2');
-          setStealVisual(localStorage.getItem('showStealVisualOverlay') === 'true');
-          setShowRoundSummary(localStorage.getItem('showRoundSummary') === 'true');
-          setRoundWinner(localStorage.getItem('roundWinner') || '');
-          setRoundPoints(localStorage.getItem('roundPoints') || '');
+          setPassOrPlayChoice(
+            (localStorage.getItem("passOrPlayChoice") as "play" | "pass") ||
+              null
+          );
+          setShowStealOverlay(
+            localStorage.getItem("showStealOverlay") === "true"
+          );
+          setStealTeam(
+            (localStorage.getItem("stealTeam") as "team1" | "team2") || "team2"
+          );
+          setStealVisual(
+            localStorage.getItem("showStealVisualOverlay") === "true"
+          );
+          setShowRoundSummary(
+            localStorage.getItem("showRoundSummary") === "true"
+          );
+          setRoundWinner(localStorage.getItem("roundWinner") || "");
+          setRoundPoints(localStorage.getItem("roundPoints") || "");
         } catch (error) {
-          console.error("Error parsing game state:", error)
+          console.error("Error parsing game state:", error);
         }
       }
-    }
+    };
 
-    loadGameState()
-    const interval = setInterval(loadGameState, 100)
-    return () => clearInterval(interval)
-  }, [])
+    loadGameState();
+    const interval = setInterval(loadGameState, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fade out the STEAL overlay after 1.5s
   useEffect(() => {
     if (stealVisual) {
       const timeout = setTimeout(() => {
         setStealVisual(false);
-        localStorage.setItem('showStealVisualOverlay', 'false');
+        localStorage.setItem("showStealVisualOverlay", "false");
       }, 2500);
       return () => clearTimeout(timeout);
     }
@@ -135,14 +153,13 @@ export default function GamePlayPage() {
   // Delay hiding of the Pass/Play overlay to allow animations
   useEffect(() => {
     if (showPassOrPlayOverlay) {
-      localStorage.setItem('passOrPlayChoice', 'none');
+      localStorage.setItem("passOrPlayChoice", "none");
       setPassOrPlayOverlayVisible(true);
-     
     } else if (passOrPlayOverlayVisible) {
       const timeout = setTimeout(() => {
         setPassOrPlayOverlayVisible(false);
       }, 2000); // adjust delay as needed
-      
+
       return () => clearTimeout(timeout);
     }
   }, [showPassOrPlayOverlay, passOrPlayOverlayVisible]);
@@ -162,10 +179,13 @@ export default function GamePlayPage() {
       "match-winner": "/states/match-winner",
       "bracket-update": "/states/bracket-update",
       "tournament-winner": "/states/tournament-winner",
+      "grand-winner": "/states/grand-winner",
     };
     channel.onmessage = (event) => {
       const { gameState } = event.data;
-      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      const targetPath =
+        gameStateRoutes[gameState as keyof typeof gameStateRoutes] ||
+        "/states/idle";
       if (window.location.pathname !== targetPath) {
         router.replace(targetPath);
       }
@@ -178,26 +198,28 @@ export default function GamePlayPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto mb-8"></div>
-          <h1 className="text-4xl md:text-8xl font-bold text-white mb-4 tracking-wider animate-pulse">LOADING...</h1>
+          <h1 className="text-4xl md:text-8xl font-bold text-white mb-4 tracking-wider animate-pulse">
+            LOADING...
+          </h1>
         </div>
       </div>
-    )
+    );
   }
 
-  const team1Colors1 = gameData.team1Config.color1
-  const team1Colors2 = gameData.team1Config.color2
-  const team2Colors1 = gameData.team2Config.color1
-  const team2Colors2 = gameData.team2Config.color2
-  
+  const team1Colors1 = gameData.team1Config.color1;
+  const team1Colors2 = gameData.team1Config.color2;
+  const team2Colors1 = gameData.team2Config.color1;
+  const team2Colors2 = gameData.team2Config.color2;
 
   return (
-    <div className="min-h-screen relative overflow-hidden"
-    style={{
-      backgroundImage: "url('/game-screen.png')",
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-    }}
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        backgroundImage: "url('/game-screen.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
     >
       {/* Cumulative Scores (top left/right) */}
       {passOrPlayOverlayVisible && (
@@ -206,19 +228,39 @@ export default function GamePlayPage() {
             <img
               src="/play.png"
               alt="Play"
-              className={`transition-all duration-500 mb-2 ${passOrPlayChoice === 'play' ? 'animate-scale-up drop-shadow-[0_0_30px_rgba(34,197,94,0.8)]' : passOrPlayChoice === 'pass' ? 'opacity-30 grayscale' : 'animate-pulse'}`}
+              className={`transition-all duration-500 mb-2 ${
+                passOrPlayChoice === "play"
+                  ? "animate-scale-up drop-shadow-[0_0_30px_rgba(34,197,94,0.8)]"
+                  : passOrPlayChoice === "pass"
+                  ? "opacity-30 grayscale"
+                  : "animate-pulse"
+              }`}
             />
-            <img src="/or.png" alt="or" className={`w-40 ${passOrPlayChoice === 'play' || passOrPlayChoice === 'pass' ? 'opacity-30 grayscale' : 'animate-pulse'}`} />
+            <img
+              src="/or.png"
+              alt="or"
+              className={`w-40 ${
+                passOrPlayChoice === "play" || passOrPlayChoice === "pass"
+                  ? "opacity-30 grayscale"
+                  : "animate-pulse"
+              }`}
+            />
             <img
               src="/pass.png"
               alt="Pass"
-              className={`transition-all duration-500 mt-2 ${passOrPlayChoice === 'pass' ? 'animate-scale-up drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]' : passOrPlayChoice === 'play' ? 'opacity-30 grayscale' : 'animate-pulse'}`}
+              className={`transition-all duration-500 mt-2 ${
+                passOrPlayChoice === "pass"
+                  ? "animate-scale-up drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]"
+                  : passOrPlayChoice === "play"
+                  ? "opacity-30 grayscale"
+                  : "animate-pulse"
+              }`}
             />
           </div>
         </div>
       )}
-  
-        {stealVisual && (
+
+      {stealVisual && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <img
             src="/steal.png"
@@ -235,7 +277,9 @@ export default function GamePlayPage() {
       {showRoundSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-center max-w-md w-full">
-            <h2 className="text-4xl font-bold text-yellow-400 mb-4">Round Summary</h2>
+            <h2 className="text-4xl font-bold text-yellow-400 mb-4">
+              Round Summary
+            </h2>
             <div className="text-2xl text-white mb-2">
               Winner: <span className="font-bold">{roundWinner}</span>
             </div>
@@ -246,7 +290,7 @@ export default function GamePlayPage() {
             <button
               className="bg-blue-600 text-white px-6 py-2 rounded font-bold"
               onClick={() => {
-                localStorage.setItem('showRoundSummary', 'false');
+                localStorage.setItem("showRoundSummary", "false");
               }}
             >
               Next Round
@@ -284,25 +328,25 @@ export default function GamePlayPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col p-4 md:p-6">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="text-center py-6 md:py-8"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <div className=" px-6 md:px-8 py-3 md:py-4 rounded-2xl  inline-block">
-            <h2 className="text-2xl md:text-3xl "
-            
-            style={{
-              color: '#FFF',
-              textAlign: 'center',
-              fontFamily: 'Mozaic GEO',
-              fontSize: 80.362,
-              fontStyle: 'normal',
-              fontWeight: 950,
-              lineHeight: 'normal',
-              textTransform: 'uppercase',
-            }}
+            <h2
+              className="text-2xl md:text-3xl "
+              style={{
+                color: "#FFF",
+                textAlign: "center",
+                fontFamily: "Mozaic GEO",
+                fontSize: 80.362,
+                fontStyle: "normal",
+                fontWeight: 950,
+                lineHeight: "normal",
+                textTransform: "uppercase",
+              }}
             >
               {roundNames[gameData.currentRound]}
             </h2>
@@ -310,109 +354,123 @@ export default function GamePlayPage() {
         </motion.div>
 
         {/* Round Pool Score (center top) */}
-        <motion.div 
+        <motion.div
           className="flex justify-center mt-8 mb-4 "
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
         >
-            {/* Pool Score */}
-            <div
-              className="mx-auto mb-16 min-w-60 min-h-28 flex justify-center  items-center"
-              style={{
-                borderRadius: '29px',
-                border: '4px solid #7FE9FE',
-                background: 'rgba(0, 0, 0, 0.34)',
-                boxShadow: '0px 4px 33.4px 30px rgba(255, 255, 255, 0.22)',
-                color: '#FFF',
-                textAlign: 'center',
-                fontFamily: 'Mozaic GEO, sans-serif',
-                fontSize: 80,
-                fontStyle: 'normal',
-                fontWeight: 690,
-                lineHeight: 'normal',
-                maxWidth: 400
-              }}
-            >
-              {gameData.roundScore ?? 0}
-            </div>
+          {/* Pool Score */}
+          <div
+            className="mx-auto mb-16 min-w-60 min-h-28 flex justify-center  items-center"
+            style={{
+              borderRadius: "29px",
+              border: "4px solid #7FE9FE",
+              background: "rgba(0, 0, 0, 0.34)",
+              boxShadow: "0px 4px 33.4px 30px rgba(255, 255, 255, 0.22)",
+              color: "#FFF",
+              textAlign: "center",
+              fontFamily: "Mozaic GEO, sans-serif",
+              fontSize: 80,
+              fontStyle: "normal",
+              fontWeight: 690,
+              lineHeight: "normal",
+              maxWidth: 400,
+            }}
+          >
+            {gameData.roundScore ?? 0}
+          </div>
         </motion.div>
-        
 
         {/* Question */}
         {gameData.currentQuestion && (
           <>
             {/* Team overall scores left/right */}
-            <motion.div 
+            <motion.div
               className="absolute flex justify-center flex-col align-middle items-center left-0 top-1/2 transform -translate-y-1/2 z-30"
               initial={{ opacity: 0, x: -100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             >
-               <img src={gameData.team1Config.logo} className="w-80 h-80 ml-6 object-contain absolute bottom-10"/>
+              <img
+                src={gameData.team1Config.logo}
+                className="w-80 h-80 ml-6 object-contain absolute bottom-10"
+              />
               <div
                 style={{
                   minWidth: 120,
                   minHeight: 80,
                   borderRadius: 40,
                   background: `linear-gradient(292deg, #${team1Colors1} 36.24%, #${team1Colors2} 80.85%, #${team1Colors2} 103.71%)`,
-                  color: '#000',
-                  fontFamily: 'Mozaic GEO, sans-serif',
+                  color: "#000",
+                  fontFamily: "Mozaic GEO, sans-serif",
                   fontWeight: 900,
                   fontSize: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow:
+                    " 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset",
                   marginLeft: 24,
                 }}
-              > 
-              <div className="m-6 flex justify-center align-middle items-center" 
-                style={{
-                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
-                  borderRadius: 20,
-                }}>
-                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team1Score}</span>
-              </div>
+              >
+                <div
+                  className="m-6 flex justify-center align-middle items-center"
+                  style={{
+                    boxShadow:
+                      " 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset",
+                    borderRadius: 20,
+                  }}
+                >
+                  <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">
+                    {gameData.team1Score}
+                  </span>
+                </div>
               </div>
             </motion.div>
-            
-            
-            <motion.div 
+
+            <motion.div
               className="absolute right-0 top-1/2 flex justify-center flex-col align-middle items-center transform -translate-y-1/2 z-30"
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             >
-               <img src={gameData.team2Config.logo} className="w-80 h-80 object-contain absolute bottom-10"/>
+              <img
+                src={gameData.team2Config.logo}
+                className="w-80 h-80 object-contain absolute bottom-10"
+              />
               <div
                 style={{
                   minWidth: 120,
                   minHeight: 80,
                   borderRadius: 40,
                   background: `linear-gradient(292deg, #${team2Colors1} 36.24%, #${team2Colors2} 80.85%, #${team2Colors2} 103.71%)`,
-                  color: '#000',
-                  fontFamily: 'Mozaic GEO, sans-serif',
+                  color: "#000",
+                  fontFamily: "Mozaic GEO, sans-serif",
                   fontWeight: 900,
                   fontSize: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow:
+                    " 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset",
                   marginRight: 24,
                 }}
-              > 
-              <div className="m-6 flex justify-center align-middle items-center" 
-                style={{
-                  boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
-                  borderRadius: 20,
-                }}>
-                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team2Score}</span>
-              </div>
-                 
+              >
+                <div
+                  className="m-6 flex justify-center align-middle items-center"
+                  style={{
+                    boxShadow:
+                      " 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset",
+                    borderRadius: 20,
+                  }}
+                >
+                  <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">
+                    {gameData.team2Score}
+                  </span>
+                </div>
               </div>
             </motion.div>
-
 
             <motion.div
               className="mx-auto mb-20 max-w-6xl w-full"
@@ -420,25 +478,24 @@ export default function GamePlayPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
               style={{
-                color: '#000',
-                textAlign: 'center',
-                fontFamily: 'Mozaic GEO, sans-serif',
+                color: "#000",
+                textAlign: "center",
+                fontFamily: "Mozaic GEO, sans-serif",
                 fontSize: 50,
-                fontStyle: 'normal',
+                fontStyle: "normal",
                 fontWeight: 690,
-                lineHeight: 'normal',
+                lineHeight: "normal",
                 borderRadius: 20,
-                border: '5px solid #7FE9FE',
-                background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
-                padding: '18px 32px',
+                border: "5px solid #7FE9FE",
+                background:
+                  "linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)",
+                padding: "18px 32px",
               }}
             >
               {gameData.currentQuestion.question}
             </motion.div>
-            
 
-
-            <motion.div 
+            <motion.div
               className="flex-1 flex items-center justify-center px-4"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -449,10 +506,10 @@ export default function GamePlayPage() {
                 <div
                   className=" md:px-4 md:py-1"
                   style={{
-                    borderRadius: '29px',
-                    border: '4px solid #7FE9FE',
-                    background: 'rgba(0, 0, 0, 0.34)',
-                    boxShadow: '0px 4px 33.4px 30px rgba(255, 255, 255, 0.22)',
+                    borderRadius: "29px",
+                    border: "4px solid #7FE9FE",
+                    background: "rgba(0, 0, 0, 0.34)",
+                    boxShadow: "0px 4px 33.4px 30px rgba(255, 255, 255, 0.22)",
                     viewTransitionName: "game-board",
                   }}
                 >
@@ -461,28 +518,37 @@ export default function GamePlayPage() {
                       {/* Left column */}
                       <div className="space-y-4">
                         {gameData.currentQuestion.answers
-                          .slice(0, Math.ceil(gameData.currentQuestion.answers.length / 2))
+                          .slice(
+                            0,
+                            Math.ceil(
+                              gameData.currentQuestion.answers.length / 2
+                            )
+                          )
                           .map((answer, index) => (
                             <motion.div
                               key={index}
                               initial={{ opacity: 0, y: 50, scale: 0.8 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ 
-                                duration: 0.5, 
-                                delay: 0.4 + (index * 0.1), // Staggered delay based on index
+                              transition={{
+                                duration: 0.5,
+                                delay: 0.4 + index * 0.1, // Staggered delay based on index
                                 ease: [0.16, 1, 0.3, 1], // Custom ease for a snappy pop-in
                                 scale: {
                                   type: "spring",
                                   damping: 10,
-                                  stiffness: 200
-                                }
+                                  stiffness: 200,
+                                },
                               }}
-                              className={`relative overflow-hidden transition-all duration-700 ${gameData.revealedAnswers[index] ? 'flip-in' : ''}`}
+                              className={`relative overflow-hidden transition-all duration-700 ${
+                                gameData.revealedAnswers[index] ? "flip-in" : ""
+                              }`}
                               style={{
-                                borderRadius: '18px',
-                                background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
-                                boxShadow: '0px 6px 12.4px 8px rgba(0, 0, 0, 0.25) inset',
-                                minHeight: '80px',
+                                borderRadius: "18px",
+                                background:
+                                  "linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)",
+                                boxShadow:
+                                  "0px 6px 12.4px 8px rgba(0, 0, 0, 0.25) inset",
+                                minHeight: "80px",
                                 viewTransitionName: `answer-${index}`,
                               }}
                             >
@@ -496,8 +562,10 @@ export default function GamePlayPage() {
                                         height: 69,
                                         background: "#4C98D8",
                                         borderRadius: "50%",
-                                        boxShadow: "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset, 0px 4px 20px 0px rgba(0,0,0,0.15)",
-                                        filter: "drop-shadow(0px 4px 12px rgba(0,0,0,0.15))",
+                                        boxShadow:
+                                          "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset, 0px 4px 20px 0px rgba(0,0,0,0.15)",
+                                        filter:
+                                          "drop-shadow(0px 4px 12px rgba(0,0,0,0.15))",
                                       }}
                                     >
                                       <span
@@ -517,17 +585,19 @@ export default function GamePlayPage() {
                                   <span
                                     className="w-full text-start"
                                     style={{
-                                      color: '#FFF',
-                                      fontFamily: 'Mozaic GEO, sans-serif',
-                                      fontSize: '40px',
-                                      fontStyle: 'normal',
+                                      color: "#FFF",
+                                      fontFamily: "Mozaic GEO, sans-serif",
+                                      fontSize: "40px",
+                                      fontStyle: "normal",
                                       fontWeight: 690,
-                                      lineHeight: 'normal',
+                                      lineHeight: "normal",
                                       letterSpacing: 0,
-                                      display: 'block',
+                                      display: "block",
                                     }}
                                   >
-                                    {gameData.revealedAnswers[index] ? answer.text : ""}
+                                    {gameData.revealedAnswers[index]
+                                      ? answer.text
+                                      : ""}
                                   </span>
                                 </div>
                                 {gameData.revealedAnswers[index] && (
@@ -537,12 +607,19 @@ export default function GamePlayPage() {
                                       width: 70,
                                       height: 70,
                                       borderRadius: 15,
-                                      background: '#4C98D8',
-                                      boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.25) inset',
-                                      filter: 'drop-shadow(0px 1px 15px rgba(0,0,0,0.25))',
+                                      background: "#4C98D8",
+                                      boxShadow:
+                                        "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset",
+                                      filter:
+                                        "drop-shadow(0px 1px 15px rgba(0,0,0,0.25))",
                                     }}
                                   >
-                                    <span className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
+                                    <span
+                                      className="text-3xl md:text-4xl font-bold text-white"
+                                      style={{
+                                        fontFamily: "Mozaic GEO, sans-serif",
+                                      }}
+                                    >
                                       {answer.points}
                                     </span>
                                   </div>
@@ -555,30 +632,44 @@ export default function GamePlayPage() {
                       {/* Right column */}
                       <div className="space-y-4">
                         {gameData.currentQuestion.answers
-                          .slice(Math.ceil(gameData.currentQuestion.answers.length / 2))
+                          .slice(
+                            Math.ceil(
+                              gameData.currentQuestion.answers.length / 2
+                            )
+                          )
                           .map((answer, index) => {
-                            const actualIndex = index + Math.ceil(gameData.currentQuestion.answers.length / 2)
+                            const actualIndex =
+                              index +
+                              Math.ceil(
+                                gameData.currentQuestion.answers.length / 2
+                              );
                             return (
                               <motion.div
                                 key={index}
                                 initial={{ opacity: 0, y: 50, scale: 0.8 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ 
-                                  duration: 0.5, 
-                                  delay: 0.4 + (index * 0.1), // Staggered delay based on index
+                                transition={{
+                                  duration: 0.5,
+                                  delay: 0.4 + index * 0.1, // Staggered delay based on index
                                   ease: [0.16, 1, 0.3, 1], // Custom ease for a snappy pop-in
                                   scale: {
                                     type: "spring",
                                     damping: 10,
-                                    stiffness: 200
-                                  }
+                                    stiffness: 200,
+                                  },
                                 }}
-                                className={`relative overflow-hidden transition-all duration-700 ${gameData.revealedAnswers[actualIndex] ? 'flip-in' : ''}`}
+                                className={`relative overflow-hidden transition-all duration-700 ${
+                                  gameData.revealedAnswers[actualIndex]
+                                    ? "flip-in"
+                                    : ""
+                                }`}
                                 style={{
-                                  borderRadius: '18px',
-                                  background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
-                                  boxShadow: '0px 6px 12.4px 8px rgba(0, 0, 0, 0.25) inset',
-                                  minHeight: '80px',
+                                  borderRadius: "18px",
+                                  background:
+                                    "linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)",
+                                  boxShadow:
+                                    "0px 6px 12.4px 8px rgba(0, 0, 0, 0.25) inset",
+                                  minHeight: "80px",
                                   viewTransitionName: `answer-${actualIndex}`,
                                 }}
                               >
@@ -592,8 +683,10 @@ export default function GamePlayPage() {
                                           height: 69,
                                           background: "#4C98D8",
                                           borderRadius: "50%",
-                                          boxShadow: "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset, 0px 4px 20px 0px rgba(0,0,0,0.15)",
-                                          filter: "drop-shadow(0px 4px 12px rgba(0,0,0,0.15))",
+                                          boxShadow:
+                                            "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset, 0px 4px 20px 0px rgba(0,0,0,0.15)",
+                                          filter:
+                                            "drop-shadow(0px 4px 12px rgba(0,0,0,0.15))",
                                         }}
                                       >
                                         <span
@@ -601,7 +694,8 @@ export default function GamePlayPage() {
                                             color: "#FFE14C",
                                             fontWeight: 900,
                                             fontSize: 45,
-                                            fontFamily: "Mozaic GEO, sans-serif",
+                                            fontFamily:
+                                              "Mozaic GEO, sans-serif",
                                             textAlign: "center",
                                             lineHeight: "1",
                                           }}
@@ -613,42 +707,58 @@ export default function GamePlayPage() {
                                     <span
                                       className="w-full text-center"
                                       style={{
-                                        color: '#FFF',
-                                        fontFamily: 'Mozaic GEO, sans-serif',
-                                        fontSize: '40px',
-                                        fontStyle: 'normal',
+                                        color: "#FFF",
+                                        fontFamily: "Mozaic GEO, sans-serif",
+                                        fontSize: "40px",
+                                        fontStyle: "normal",
                                         fontWeight: 690,
-                                        lineHeight: 'normal',
+                                        lineHeight: "normal",
                                         letterSpacing: 0,
-                                        display: 'block',
+                                        display: "block",
                                       }}
                                     >
-                                      {gameData.revealedAnswers[actualIndex] ? answer.text : ""}
+                                      {gameData.revealedAnswers[actualIndex]
+                                        ? answer.text
+                                        : ""}
                                     </span>
                                   </div>
                                   {gameData.revealedAnswers[actualIndex] && (
                                     <motion.div
                                       initial={{ opacity: 0, y: 50 }}
                                       animate={{ opacity: 1, y: 0 }}
-                                      transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+                                      transition={{
+                                        duration: 0.8,
+                                        delay: 0.6,
+                                        ease: "easeOut",
+                                      }}
                                       className="flex items-center justify-center "
                                       style={{
                                         width: 70,
                                         height: 70,
                                         borderRadius: 15,
-                                        background: '#4C98D8',
-                                        boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.25) inset',
-                                        filter: 'drop-shadow(0px 1px 15px rgba(0,0,0,0.25))',
+                                        background: "#4C98D8",
+                                        boxShadow:
+                                          "0px 6px 12.4px 8px rgba(0,0,0,0.25) inset",
+                                        filter:
+                                          "drop-shadow(0px 1px 15px rgba(0,0,0,0.25))",
                                       }}
                                     >
-                                      <span className="text-2xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
-                                        {answer.points * getPointMultiplier(gameData.currentRound)}
+                                      <span
+                                        className="text-2xl md:text-4xl font-bold text-white"
+                                        style={{
+                                          fontFamily: "Mozaic GEO, sans-serif",
+                                        }}
+                                      >
+                                        {answer.points *
+                                          getPointMultiplier(
+                                            gameData.currentRound
+                                          )}
                                       </span>
                                     </motion.div>
                                   )}
                                 </div>
                               </motion.div>
-                            )
+                            );
                           })}
                       </div>
                     </div>
@@ -668,24 +778,46 @@ export default function GamePlayPage() {
             }}
           >
             {[0, 1, 2].map((i) => (
-              <div key={i} className="relative" style={{ borderRadius: '10px', border: '3px solid rgba(121, 209, 255, 0.30)'}}>
-                <svg 
-                  className={`${i < gameData.strikes ? "text-red-500 " : ""} transition-all duration-500`}
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="56" 
-                  height="52" 
-                  viewBox="0 0 56 52" 
+              <div
+                key={i}
+                className="relative"
+                style={{
+                  borderRadius: "10px",
+                  border: "3px solid rgba(121, 209, 255, 0.30)",
+                }}
+              >
+                <svg
+                  className={`${
+                    i < gameData.strikes ? "text-red-500 " : ""
+                  } transition-all duration-500`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="56"
+                  height="52"
+                  viewBox="0 0 56 52"
                   fill="none"
                 >
-                  <rect x="-0.265625" y="-13.0806" width="94.505" height="17.3212" transform="rotate(43.8845 -0.265625 -13.0806)" fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"} fillOpacity="0.3"/>
-                  <rect width="94.505" height="17.3212" transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)" fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"} fillOpacity="0.3"/>
+                  <rect
+                    x="-0.265625"
+                    y="-13.0806"
+                    width="94.505"
+                    height="17.3212"
+                    transform="rotate(43.8845 -0.265625 -13.0806)"
+                    fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"}
+                    fillOpacity="0.3"
+                  />
+                  <rect
+                    width="94.505"
+                    height="17.3212"
+                    transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)"
+                    fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"}
+                    fillOpacity="0.3"
+                  />
                 </svg>
-                
               </div>
             ))}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
