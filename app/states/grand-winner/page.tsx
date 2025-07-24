@@ -126,7 +126,7 @@ export default function GrandWinnerPage() {
         </div>
       )}
 
-      <div className="text-center z-10 max-w-6xl mx-auto bg-red-300 px-4 flex-grow flex flex-col justify-center">
+      <div className="text-center z-10 max-w-6xl mx-auto  px-4 flex-grow flex flex-col justify-center">
         {/* Main Title */}
         <div className="mt-12">
           <h1 className="text-xl md:text-9xl font-bold text-yellow-400 mb-4  animate-bounce drop-shadow-2xl">
