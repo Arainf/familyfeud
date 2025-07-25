@@ -80,6 +80,7 @@ type GameState =
   | "match-winner"
   | "bracket-update"
   | "tournament-winner"
+  | "grand-winner"
 
 const gameStateNames = {
   idle: "Idle Screen",
@@ -91,6 +92,7 @@ const gameStateNames = {
   "match-winner": "Match Winner",
   "bracket-update": "Bracket Update",
   "tournament-winner": "Tournament Winner",
+  "grand-winner": "Grand Winner"
 }
 
 const gameStateRoutes = {
@@ -103,6 +105,7 @@ const gameStateRoutes = {
   "match-winner": "/states/match-winner",
   "bracket-update": "/states/bracket-update",
   "tournament-winner": "/states/tournament-winner",
+  "grand-winner": "/states/grand-winner"
 }
 
 // Cookie utilities
@@ -288,11 +291,18 @@ export default function FamilyFeudControl() {
   const [showScoreAnimation, setShowScoreAnimation] = useState(false)
   const [animatingScore, setAnimatingScore] = useState(0)
   const [revealedAnswers, setRevealedAnswers] = useState<boolean[]>([])
+  const [isQuestionRevealed, setIsQuestionRevealed] = useState(false)
   const [currentTeam, setCurrentTeam] = useState<'team1' | 'team2'>("team1")
   const [faceOffWinnerTeam, setFaceOffWinnerTeam] = useState<'team1' | 'team2' | null>(null)
   const [showPlayPass, setShowPlayPass] = useState(false)
   const [stealActive, setStealActive] = useState(false);
   const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
+
+  const handleRevealQuestion = () => {
+    setIsQuestionRevealed(true);
+    localStorage.setItem('isQuestionRevealed', 'true');
+    // broadcast?.postMessage({ type: 'REVEAL_QUESTION' });
+  };
 
   // Dialog states
   const [showTeamCustomization, setShowTeamCustomization] = useState(false)
@@ -323,9 +333,7 @@ export default function FamilyFeudControl() {
       const team2 = currentTournament.teams.find(t => t.name === currentMatch.team2Id)
 
       if (team1 && team2) {
-        setRoundScore(0)
         setStrikes(0)
-        setRevealedAnswers([])
         setCurrentRound(currentMatch.currentRound || 1)
         setCurrentGameState(currentMatch.gameState || "idle")
 
@@ -378,6 +386,7 @@ export default function FamilyFeudControl() {
             matches: currentTournament.matches,
             currentMatchIndex: currentTournament.matches.findIndex(m => m.id === currentMatch.id),
           },
+          isQuestionRevealed,
         }
 
         broadcast?.postMessage(gameState)
@@ -392,6 +401,14 @@ export default function FamilyFeudControl() {
       setTeam2Score(0)
     }
   }, [currentMatch?.id])
+
+  // Reset round score and revealed answers ONLY when the round changes
+  useEffect(() => {
+    setRoundScore(0)
+    setRevealedAnswers([])
+    setIsQuestionRevealed(false);
+    localStorage.setItem('isQuestionRevealed', 'false');
+  }, [currentRound])
 
   // Timer functionality
   useEffect(() => {
@@ -452,6 +469,7 @@ export default function FamilyFeudControl() {
         team2Score,
         roundScore,
         currentTeam,
+        isQuestionRevealed,
         strikes,
         team1Config: {
           name: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1",
@@ -505,6 +523,7 @@ export default function FamilyFeudControl() {
     currentTournament,
     currentMatch,
     revealedAnswers,
+    isQuestionRevealed,
   ])
 
   // Reset revealedAnswers when the round changes
@@ -829,7 +848,6 @@ export default function FamilyFeudControl() {
   }, 2000);
 }
 
-
   // User management functions
   const handleAuth = async () => {
     if (authMode === "register") {
@@ -1080,24 +1098,37 @@ export default function FamilyFeudControl() {
             question={currentMatch?.questions.find((q) => q.round === currentRound)?.question || "No question set."}
             answers={currentMatch?.questions.find((q) => q.round === currentRound)?.answers || []}
             revealedAnswers={revealedAnswers}
-            onReveal={(idx) => {   // Only reveal the answer, do not add points
-              revealAnswer(idx)
+            isQuestionRevealed={isQuestionRevealed}
+            onReveal={(idx) => {
+              // Only reveal the answer, do not add points
+              revealAnswer(idx);
             }}
             onAwardPoints={(idx) => {
               // Add points to the round pool only when this is called
-              const answer = currentMatch?.questions.find((q) => q.round === currentRound)?.answers[idx]
+              const answer = currentMatch?.questions.find(
+                (q) => q.round === currentRound
+              )?.answers[idx];
               if (answer) {
-                setRoundScore((prev) => prev + answer.points)
+                setRoundScore((prev) => prev + answer.points);
               }
             }}
-            currentTeam={currentTeam === "team1"
-              ? currentTournament?.teams[0]?.name || "Team 1"
-              : currentTournament?.teams[1]?.name || "Team 2"}
+            onRevealQuestion={handleRevealQuestion}
+            currentTeam={currentTeam}
+            isHost={true}
           />
 
           {/* Tournament Management */}
           <TournamentManagementCard
             currentTournament={currentTournament}
+            tournaments={tournaments}
+            onSelectTournament={(tournamentId) => {
+              if (!currentTournament) return;
+              const selectedTournament = tournaments.find((t) => t.id === tournamentId);
+              if (selectedTournament) {
+                setCurrentTournament(selectedTournament);
+                updateTournamentInStorage();
+              }
+            }}
             currentMatch={currentMatch}
             setShowTournamentDialog={setShowTournamentDialog}
             setShowTeamCustomization={setShowTeamCustomization}
@@ -1109,7 +1140,24 @@ export default function FamilyFeudControl() {
                 m.id === matchId ? { ...m, status: "completed" as const } : m
               );
               setCurrentTournament({ ...currentTournament, matches: updatedMatches });
-              // Optionally update bracket logic here
+              updateTournamentInStorage();
+            }}
+            allTeams={currentTournament?.teams || []}
+            onUpdateTeamAssignment={(matchId, team1Id, team2Id) => {
+              if (!currentTournament) return;
+              const updatedMatches = currentTournament.matches.map((m) =>
+                m.id === matchId ? { ...m, team1Id, team2Id } : m
+              );
+              setCurrentTournament({ ...currentTournament, matches: updatedMatches });
+              updateTournamentInStorage();
+            }}
+            onUpdateMatch={(matchId, updates) => {
+              if (!currentTournament) return;
+              const updatedMatches = currentTournament.matches.map((m) =>
+                m.id === matchId ? { ...m, ...updates } : m
+              );
+              setCurrentTournament({ ...currentTournament, matches: updatedMatches });
+              updateTournamentInStorage();
             }}
           />
           <BracketManagementCard

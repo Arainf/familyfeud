@@ -1,9 +1,9 @@
 "use client"
 
+import { Timer, Trophy, Users, Zap, ChevronsRight, ChevronsLeft, ArrowLeft, PlusCircle, MinusCircle, History, Settings, Eye, EyeOff, X } from 'lucide-react';
 import { useEffect, useState } from "react"
-import { X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface TeamConfig {
   name: string
@@ -87,6 +87,7 @@ export default function GamePlayPage() {
   const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
   const [stealAnswer, setStealAnswer] = useState("");
   const [stealResult, setStealResult] = useState<'success' | 'fail' | null>(null);
+  const [showQuestion, setShowQuestion] = useState(false);
 
   useEffect(() => {
     const loadGameState = () => {
@@ -110,6 +111,7 @@ export default function GamePlayPage() {
           setShowRoundSummary(localStorage.getItem('showRoundSummary') === 'true');
           setRoundWinner(localStorage.getItem('roundWinner') || '');
           setRoundPoints(localStorage.getItem('roundPoints') || '');
+          setShowQuestion(localStorage.getItem('isQuestionRevealed') === 'true');
         } catch (error) {
           console.error("Error parsing game state:", error)
         }
@@ -272,12 +274,18 @@ export default function GamePlayPage() {
 
       {/* Strike Overlay */}
       {showStrikeOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="text-center animate-pulse">
-            <span className="text-red-500 text-[180px] md:text-[300px] font-extrabold tracking-tight drop-shadow-2xl">
-              {"X".repeat(gameData?.strikes || 0)}
-            </span>
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setShowStrikeOverlay(false)}>
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="flex gap-x-4 md:gap-x-8"
+          >
+            {Array.from({ length: gameData?.strikes || 0 }).map((_, i) => (
+              <X key={i} className="text-red-500 drop-shadow-[0_5px_15px_rgba(255,0,0,0.5)] h-[400px] w-[400px] scale-[1.5]" strokeWidth={2.5} />
+            ))}
+          </motion.div>
         </div>
       )}
 
@@ -344,12 +352,12 @@ export default function GamePlayPage() {
           <>
             {/* Team overall scores left/right */}
             <motion.div 
-              className="absolute flex justify-center flex-col align-middle items-center left-0 top-1/2 transform -translate-y-1/2 z-30"
+              className="absolute flex justify-center flex-col align-middle items-center left-14 top-1/2 transform -translate-y-1/2 z-30"
               initial={{ opacity: 0, x: -100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             >
-               <img src={gameData.team1Config.logo} className="w-80 h-80 ml-6 object-contain absolute bottom-10"/>
+               <img src={gameData.team1Config.logo} className="w-80 h-80 ml-6 scale-[1.3] object-contain absolute bottom-10"/>
               <div
                 style={{
                   minWidth: 120,
@@ -372,19 +380,19 @@ export default function GamePlayPage() {
                   boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
                   borderRadius: 20,
                 }}>
-                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team1Score}</span>
+                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{String(gameData.team1Score).padStart(3, '0')}</span>
               </div>
               </div>
             </motion.div>
             
             
             <motion.div 
-              className="absolute right-0 top-1/2 flex justify-center flex-col align-middle items-center transform -translate-y-1/2 z-30"
+              className="absolute right-14 top-1/2 flex  justify-center flex-col align-middle items-center transform -translate-y-1/2 z-30"
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             >
-               <img src={gameData.team2Config.logo} className="w-80 h-80 object-contain absolute bottom-10"/>
+               <img src={gameData.team2Config.logo} className="w-80 scale-[1.3] h-80 object-contain absolute bottom-10"/>
               <div
                 style={{
                   minWidth: 120,
@@ -407,7 +415,7 @@ export default function GamePlayPage() {
                   boxShadow: ' 0px 5.666px 15.299px 0px rgba(0, 0, 0, 0.49) inset',
                   borderRadius: 20,
                 }}>
-                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{gameData.team2Score}</span>
+                <span className="text-4xl md:text-8xl mt-4 mx-6 font-extrabold self-center text-white drop-shadow-lg">{String(gameData.team2Score).padStart(3, '0')}</span>
               </div>
                  
               </div>
@@ -426,18 +434,33 @@ export default function GamePlayPage() {
                 fontSize: 50,
                 fontStyle: 'normal',
                 fontWeight: 690,
-                lineHeight: 'normal',
                 borderRadius: 20,
                 border: '5px solid #7FE9FE',
                 background: 'linear-gradient(292deg, #84D1FE 36.24%, #41ACE5 80.85%, #8DC0E3 103.71%)',
                 padding: '18px 32px',
+                minHeight: 120, // To prevent layout shift
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              {gameData.currentQuestion.question}
+              <AnimatePresence>
+                {showQuestion && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                    style={{ display: 'inline-block' }}
+                  >
+                    {gameData.currentQuestion.question}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </motion.div>
             
 
-
+            
             <motion.div 
               className="flex-1 flex items-center justify-center px-4"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -540,6 +563,7 @@ export default function GamePlayPage() {
                                       background: '#4C98D8',
                                       boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.25) inset',
                                       filter: 'drop-shadow(0px 1px 15px rgba(0,0,0,0.25))',
+                                      minWidth: 70,
                                     }}
                                   >
                                     <span className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
@@ -611,7 +635,7 @@ export default function GamePlayPage() {
                                       </div>
                                     )}
                                     <span
-                                      className="w-full text-center"
+                                      className="w-full text-start"
                                       style={{
                                         color: '#FFF',
                                         fontFamily: 'Mozaic GEO, sans-serif',
@@ -639,6 +663,7 @@ export default function GamePlayPage() {
                                         background: '#4C98D8',
                                         boxShadow: '0px 6px 12.4px 8px rgba(0,0,0,0.25) inset',
                                         filter: 'drop-shadow(0px 1px 15px rgba(0,0,0,0.25))',
+                                        minWidth: 70,
                                       }}
                                     >
                                       <span className="text-2xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
@@ -656,6 +681,7 @@ export default function GamePlayPage() {
                 </div>
               </div>
             </motion.div>
+          
           </>
         )}
 
@@ -668,19 +694,20 @@ export default function GamePlayPage() {
             }}
           >
             {[0, 1, 2].map((i) => (
-              <div key={i} className="relative" style={{ borderRadius: '10px', border: '3px solid rgba(121, 209, 255, 0.30)'}}>
-                <svg 
-                  className={`${i < gameData.strikes ? "text-red-500 " : ""} transition-all duration-500`}
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="56" 
-                  height="52" 
-                  viewBox="0 0 56 52" 
-                  fill="none"
-                >
-                  <rect x="-0.265625" y="-13.0806" width="94.505" height="17.3212" transform="rotate(43.8845 -0.265625 -13.0806)" fill={i < gameData.strikes ? "#FF0000" : "#79D1F0"} fillOpacity="0.3"/>
-                  <rect width="94.505" height="17.3212" transform="matrix(0.720739 -0.693207 -0.693207 -0.720739 -0.265625 64.915)" fill={i < gameData.strikes ? "#FF0000" : "#79D1FF"} fillOpacity="0.3"/>
-                </svg>
-                
+              <div key={i} className="relative w-[56px] h-[52px] flex items-center justify-center bg-gray-500/10" style={{ borderRadius: '10px', border: '3px solid rgba(121, 209, 255, 0.30)'}}>
+                <AnimatePresence>
+                  {i < gameData.strikes && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <X className="w-12 h-12 text-red-500" strokeWidth={4} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ))}
           </div>

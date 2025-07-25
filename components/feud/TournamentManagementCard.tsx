@@ -12,6 +12,11 @@ interface TournamentManagementCardProps {
   setShowMatchQuestions: (open: boolean) => void
   setCurrentMatch: (match: any) => void
   onCompleteMatch: (matchId: string) => void
+  allTeams: any[]
+  onUpdateTeamAssignment: (matchId: string, team1Id: string, team2Id: string) => void
+  onUpdateMatch: (matchId: string, updates: any) => void
+  tournaments: any[]
+  onSelectTournament: (tournament: any) => void
 }
 
 const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
@@ -22,24 +27,60 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
   setShowMatchQuestions,
   setCurrentMatch,
   onCompleteMatch,
-}) => (
-  <Card className="col-span-6 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
-    <CardHeader>
-      <CardTitle className="text-white flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5" />
-          Tournament Management
+  allTeams,
+  onUpdateTeamAssignment,
+  onUpdateMatch,
+  tournaments,
+  onSelectTournament,
+}) => {
+  // Format date helper
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <Card className="col-span-6 bg-gray-900/90 border-gray-800 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5" />
+            Tournament Management
+          </div>
+          <Button
+            onClick={() => setShowTournamentDialog(true)}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Tournament
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      {/* Tournament Browser Section */}
+      <div className="px-6 pt-2 pb-0">
+        <div className="mb-3">
+          <label className="block text-xs text-gray-400 mb-1">Browse Previous Tournaments</label>
+          {tournaments && tournaments.length > 0 ? (
+            <select
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              value={currentTournament?.id || ''}
+              onChange={e => {
+                const selected = tournaments.find(t => t.id === e.target.value)
+                if (selected) onSelectTournament(selected)
+              }}
+            >
+              {tournaments.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({formatDate(t.created_at || t.createdAt)})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="text-gray-500 text-xs italic">No tournaments found.</div>
+          )}
         </div>
-        <Button
-          onClick={() => setShowTournamentDialog(true)}
-          size="sm"
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Tournament
-        </Button>
-      </CardTitle>
-    </CardHeader>
+      </div>
     <CardContent>
       {currentTournament ? (
         <div className="space-y-4">
@@ -119,6 +160,41 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
                 >
                   <div>
                     <span className="font-bold text-white">Match {idx + 1}:</span> <span className="text-gray-200">{match.team1Id} vs {match.team2Id}</span>
+                    <div className="flex gap-2 mt-1">
+                      {/* Team 1 Picker */}
+                      <select
+                        className="bg-gray-700 text-white rounded px-2 py-1"
+                        value={match.team1Id || ''}
+                        onChange={e => onUpdateTeamAssignment(match.id, e.target.value, match.team2Id)}
+                      >
+                        <option value="">Pick Team 1</option>
+                        {allTeams.map((team: any) => (
+                          <option key={team.name} value={team.name}>{team.name}</option>
+                        ))}
+                      </select>
+                      {/* Team 2 Picker */}
+                      <select
+                        className="bg-gray-700 text-white rounded px-2 py-1"
+                        value={match.team2Id || ''}
+                        onChange={e => onUpdateTeamAssignment(match.id, match.team1Id, e.target.value)}
+                      >
+                        <option value="">Pick Team 2</option>
+                        {allTeams.map((team: any) => (
+                          <option key={team.name} value={team.name}>{team.name}</option>
+                        ))}
+                      </select>
+                      {/* Winner Picker */}
+                      <select
+                        className="bg-green-700 text-white rounded px-2 py-1"
+                        value={match.winnerId || ''}
+                        onChange={e => onUpdateMatch(match.id, { winnerId: e.target.value })}
+                        disabled={!match.team1Id || !match.team2Id}
+                      >
+                        <option value="">Pick Winner</option>
+                        {match.team1Id && <option value={match.team1Id}>{match.team1Id}</option>}
+                        {match.team2Id && <option value={match.team2Id}>{match.team2Id}</option>}
+                      </select>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={match.status === 'completed' ? 'bg-green-600' : 'bg-blue-600'}>{match.status}</Badge>
@@ -157,6 +233,6 @@ const TournamentManagementCard: React.FC<TournamentManagementCardProps> = ({
       )}
     </CardContent>
   </Card>
-)
+)}
 
-export default TournamentManagementCard 
+export default TournamentManagementCard;

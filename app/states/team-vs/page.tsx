@@ -157,7 +157,7 @@ export default function TeamVsPage() {
                   delay: 0.3
                 } 
               } : {}}
-              className="h-auto w-auto origin-center"
+              className="h-auto w-auto  origin-center"
               style={{
                 viewTransitionName: "team1-card",
               }}
@@ -167,7 +167,7 @@ export default function TeamVsPage() {
                   <motion.img
                     src={gameData.team1Config.logo}
                     alt="Team 1 Logo"
-                    className="h-[350px] w-[20vw] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
+                    className="h-[350px] w-[20vw] scale-[1.5] md:h-[500px] lg:h-[650px] xl:h-[800px] w-auto object-contain max-h-[70vh]"
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={animationComplete ? { 
                       scale: 1, 
