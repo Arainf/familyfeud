@@ -13,7 +13,35 @@ interface TeamConfig {
 }
 
 export default function MatchWinnerPage() {
+  const router = typeof window !== "undefined" ? require('next/navigation').useRouter() : null;
+
   const [teamWinner, setTeamWinner] = useState<TeamConfig | null>(null);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel("feud-game-state");
+    const gameStateRoutes = {
+      idle: "/states/idle",
+      "tournament-start": "/states/tournament-start",
+      "bracket-show": "/states/bracket-show",
+      "team-vs": "/states/team-vs",
+      "round-start": "/states/round-start",
+      "game-play": "/states/game-play",
+      "pass-or-play": "/states/pass-or-play",
+      "round-end-reveal": "/states/round-end-reveal",
+      "post-round-scoring": "/states/post-round-scoring",
+      "match-winner": "/states/match-winner",
+      "bracket-update": "/states/bracket-update",
+      "tournament-winner": "/states/tournament-winner",
+    };
+    channel.onmessage = (event) => {
+      const { gameState } = event.data;
+      const targetPath = gameStateRoutes[gameState as keyof typeof gameStateRoutes] || "/states/idle";
+      if (window.location.pathname !== targetPath && router) {
+        router.replace(targetPath);
+      }
+    };
+    return () => channel.close();
+  }, [router]);
 
   useEffect(() => {
     const loadGameState = () => {

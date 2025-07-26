@@ -291,18 +291,11 @@ export default function FamilyFeudControl() {
   const [showScoreAnimation, setShowScoreAnimation] = useState(false)
   const [animatingScore, setAnimatingScore] = useState(0)
   const [revealedAnswers, setRevealedAnswers] = useState<boolean[]>([])
-  const [isQuestionRevealed, setIsQuestionRevealed] = useState(false)
   const [currentTeam, setCurrentTeam] = useState<'team1' | 'team2'>("team1")
   const [faceOffWinnerTeam, setFaceOffWinnerTeam] = useState<'team1' | 'team2' | null>(null)
   const [showPlayPass, setShowPlayPass] = useState(false)
   const [stealActive, setStealActive] = useState(false);
   const [stealTeam, setStealTeam] = useState<'team1' | 'team2'>('team2');
-
-  const handleRevealQuestion = () => {
-    setIsQuestionRevealed(true);
-    localStorage.setItem('isQuestionRevealed', 'true');
-    // broadcast?.postMessage({ type: 'REVEAL_QUESTION' });
-  };
 
   // Dialog states
   const [showTeamCustomization, setShowTeamCustomization] = useState(false)
@@ -364,6 +357,7 @@ export default function FamilyFeudControl() {
           currentRound: currentMatch.currentRound || 1,
           currentQuestionIndex: currentMatch.currentQuestionIndex,
           revealedAnswers: [],
+          revealQuestion: false,
           team1Score: team1Score,
           team2Score: team2Score,
           roundScore: 0,
@@ -386,7 +380,6 @@ export default function FamilyFeudControl() {
             matches: currentTournament.matches,
             currentMatchIndex: currentTournament.matches.findIndex(m => m.id === currentMatch.id),
           },
-          isQuestionRevealed,
         }
 
         broadcast?.postMessage(gameState)
@@ -406,9 +399,14 @@ export default function FamilyFeudControl() {
   useEffect(() => {
     setRoundScore(0)
     setRevealedAnswers([])
-    setIsQuestionRevealed(false);
-    localStorage.setItem('isQuestionRevealed', 'false');
   }, [currentRound])
+
+  useEffect(() => {
+    if (currentRound === "tiebreaker") {
+      setTeam1Score(0);
+      setTeam2Score(0);
+    }
+  }, [currentRound]);
 
   // Timer functionality
   useEffect(() => {
@@ -464,12 +462,12 @@ export default function FamilyFeudControl() {
         gameState: currentGameState,
         currentRound,
         currentQuestionIndex: currentMatch.currentQuestionIndex,
+        revealQuestion: currentMatch.questions.find(q => q.round === currentRound),
         revealedAnswers,
         team1Score,
         team2Score,
         roundScore,
         currentTeam,
-        isQuestionRevealed,
         strikes,
         team1Config: {
           name: currentTournament.teams.find(t => t.name === currentMatch.team1Id)?.name || "Team 1",
@@ -523,7 +521,6 @@ export default function FamilyFeudControl() {
     currentTournament,
     currentMatch,
     revealedAnswers,
-    isQuestionRevealed,
   ])
 
   // Reset revealedAnswers when the round changes
@@ -848,6 +845,7 @@ export default function FamilyFeudControl() {
   }, 2000);
 }
 
+
   // User management functions
   const handleAuth = async () => {
     if (authMode === "register") {
@@ -1098,23 +1096,19 @@ export default function FamilyFeudControl() {
             question={currentMatch?.questions.find((q) => q.round === currentRound)?.question || "No question set."}
             answers={currentMatch?.questions.find((q) => q.round === currentRound)?.answers || []}
             revealedAnswers={revealedAnswers}
-            isQuestionRevealed={isQuestionRevealed}
-            onReveal={(idx) => {
-              // Only reveal the answer, do not add points
-              revealAnswer(idx);
+            onReveal={(idx) => {   // Only reveal the answer, do not add points
+              revealAnswer(idx)
             }}
             onAwardPoints={(idx) => {
               // Add points to the round pool only when this is called
-              const answer = currentMatch?.questions.find(
-                (q) => q.round === currentRound
-              )?.answers[idx];
+              const answer = currentMatch?.questions.find((q) => q.round === currentRound)?.answers[idx]
               if (answer) {
-                setRoundScore((prev) => prev + answer.points);
+                setRoundScore((prev) => prev + answer.points)
               }
             }}
-            onRevealQuestion={handleRevealQuestion}
-            currentTeam={currentTeam}
-            isHost={true}
+            currentTeam={currentTeam === "team1"
+              ? currentTournament?.teams[0]?.name || "Team 1"
+              : currentTournament?.teams[1]?.name || "Team 2"}
           />
 
           {/* Tournament Management */}
