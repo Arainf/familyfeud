@@ -667,7 +667,7 @@ export default function GamePlayPage() {
                                       }}
                                     >
                                       <span className="text-2xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Mozaic GEO, sans-serif' }}>
-                                        {answer.points * getPointMultiplier(gameData.currentRound)}
+                                        {answer.points}
                                       </span>
                                     </motion.div>
                                   )}
