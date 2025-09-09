@@ -49,38 +49,57 @@ export interface GameSession {
 // Auth functions
 export const signUp = async (email: string, password: string, username: string) => {
   try {
-    // First check if username already exists
-    const { data: existingUser } = await supabase.from("accounts").select("username").eq("username", username).single()
+    // Step 0: Check if username already exists
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from("accounts")
+      .select("username")
+      .eq("username", username)
+      .maybeSingle()
+
+    if (existingUserError) throw existingUserError
 
     if (existingUser) {
       return { data: null, error: { message: "Username already exists" } }
     }
 
-    // Hash password (in production, use proper password hashing)
-    const passwordHash = btoa(password) // Simple base64 encoding for demo
+    // Step 1: Sign up with Supabase Auth
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
+    })
 
-    // Insert into accounts table
-    const { data, error } = await supabase
+    if (signUpError) throw signUpError
+
+    const user = authData.user
+    if (!user) throw new Error("Signup failed: no user returned")
+
+    // Step 2: Insert into accounts (must match auth.uid())
+    const { data: accountData, error: insertError } = await supabase
       .from("accounts")
       .insert([
         {
+          id: user.id, // must match auth.users.id
           email,
-          username,
-          password_hash: passwordHash,
-        },
+          username, 
+          password_hash: btoa(password), // Simple base64 encoding for demo; use a proper hash in production
+          is_active: true
+        }
       ])
       .select()
       .single()
 
-    if (error) throw error
+    if (insertError) throw insertError
 
-    return { data, error: null }
+    return { data: accountData, error: null }
   } catch (error) {
     return { data: null, error }
   }
 }
 
-export const signIn = async (email: string, password: string) => {
+export const signIn = async (username: string, password: string) => {
   try {
     // Hash password for comparison
     const passwordHash = btoa(password)
@@ -89,7 +108,7 @@ export const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase
       .from("accounts")
       .select("*")
-      .eq("email", email)
+      .eq("username", username)
       .eq("password_hash", passwordHash)
       .eq("is_active", true)
       .single()

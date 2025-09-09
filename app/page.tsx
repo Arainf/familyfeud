@@ -14,51 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import  SoundControlCard  from "@/components/feud/SoundControlCard"
-import {
-  uploadImage,
-  signUp,
-  signIn,
-  getTournaments,
-  createTournament as createTournamentDB,
-  updateTournament,
-} from "@/lib/supabase"
-import {
-  X,
-  Monitor,
-  Settings,
-  Plus,
-  Trash2,
-  Play,
-  Save,
-  Crown,
-  Star,
-  Heart,
-  Zap,
-  Shield,
-  Trophy,
-  Target,
-  Flame,
-  LogOut,
-  UserPlus,
-  LogIn,
-  Gamepad2,
-  Users,
-  FileText,
-  Pause,
-  RotateCcw,
-  Eye,
-  Mic,
-  MicOff,
-  Sparkles,
-  Rocket,
-  Upload,
-  ImageIcon,
-  PaletteIcon,
-  ChevronRight,
-  Circle,
-  CheckCircle,
-  ExternalLink,
-} from "lucide-react"
+import { uploadImage, signUp, signIn, getTournaments, createTournament as createTournamentDB, updateTournament } from "@/lib/supabase"
+import { X, Plus, Trash2, Save, Crown, Star, Heart, Zap, Shield, Trophy, Target, Flame, Gamepad2, Upload, ImageIcon, Circle, CheckCircle } from "lucide-react"
 import AuthDialog from "@/components/feud/AuthDialog"
 import HeaderBar from "@/components/feud/HeaderBar"
 import GameControlsCard from "@/components/feud/GameControlsCard"
@@ -72,41 +29,41 @@ import BracketManagementCard from "@/components/feud/BracketManagementCard"
 // Game States for the new flow
 type GameState =
   | "idle"
-  | "bracket-show"
   | "team-vs"
   | "round-start"
   | "game-play"
   | "round-end-reveal"
   | "match-winner"
-  | "bracket-update"
-  | "tournament-winner"
-  | "grand-winner"
+  // | "bracket-show" SOON TO IMPLEMENT
+  // | "bracket-update" SOON TO IMPLEMENT
+  // | "tournament-winner" SOON TO IMPLEMENT
+  // | "grand-winner" SOON TO IMPLEMENT
 
 const gameStateNames = {
   idle: "Idle Screen",
-  "bracket-show": "Bracket Display",
   "team-vs": "Team Face-off",
   "round-start": "Round Start",
   "game-play": "Game Play",
-  "round-end-reveal": "Round End Reveal",
-  "match-winner": "Match Winner",
-  "bracket-update": "Bracket Update",
-  "tournament-winner": "Tournament Winner",
-  "grand-winner": "Grand Winner"
+  "round-end-reveal": "Round End Reveal"
+  // "bracket-show": "Bracket Display", SOON TO IMPLEMENT
+  // "match-winner": "Match Winner", SOON TO IMPLEMENT
+  // "bracket-update": "Bracket Update", SOON TO IMPLEMENT
+  // "tournament-winner": "Tournament Winner", SOON TO IMPLEMENT
+  // "grand-winner": "Grand Winner" SOON TO IMPLEMENT
 }
 
 const gameStateRoutes = {
   idle: "/states/idle",
-  "bracket-show": "/states/bracket-show",
   "team-vs": "/states/team-vs",
   "round-start": "/states/round-start",
   "game-play": "/states/game-play",
   "round-end-reveal": "/states/round-end-reveal",
-  "match-winner": "/states/match-winner",
-  "bracket-update": "/states/bracket-update",
-  "tournament-winner": "/states/tournament-winner",
-  "grand-winner": "/states/grand-winner"
-}
+  // "bracket-show": "/states/bracket-show", SOON TO IMPLEMENT
+  // "match-winner": "/states/match-winner", SOON TO IMPLEMENT
+  // "bracket-update": "/states/bracket-update", SOON TO IMPLEMENT
+  // "tournament-winner": "/states/tournament-winner", SOON TO IMPLEMENT
+  // "grand-winner": "/states/grand-winner" SOON TO IMPLEMENT
+} 
 
 // Cookie utilities
 const setCookie = (name: string, value: string, days = 7) => {
@@ -130,19 +87,6 @@ const deleteCookie = (name: string) => {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
 }
 
-// Enhanced game data structure
-const questionCategories = [
-  { id: "general", name: "General Knowledge", color: "bg-blue-500" },
-  { id: "sports", name: "Sports", color: "bg-green-500" },
-  { id: "entertainment", name: "Entertainment", color: "bg-purple-500" },
-  { id: "food", name: "Food & Drink", color: "bg-orange-500" },
-  { id: "history", name: "History", color: "bg-red-500" },
-  { id: "science", name: "Science", color: "bg-cyan-500" },
-  { id: "family", name: "Family Life", color: "bg-pink-500" },
-  { id: "work", name: "Work & Career", color: "bg-yellow-500" },
-  { id: "travel", name: "Travel", color: "bg-indigo-500" },
-  { id: "custom", name: "Custom", color: "bg-gray-500" },
-]
 
 const tournamentModes = [
   { id: "roundrobin", name: "Round Robin", description: "Every team plays every other team" },
@@ -538,6 +482,9 @@ export default function FamilyFeudControl() {
   const loadUserTournaments = async (userId: string) => {
     try {
       const { data, error } = await getTournaments(userId)
+      if (!data)
+        return
+
       if (error) {
         console.error("Error loading tournaments:", error)
         return
@@ -876,7 +823,7 @@ export default function FamilyFeudControl() {
       }
     } else {
       try {
-        const { data, error } = await signIn(authForm.email, authForm.password)
+        const { data, error } = await signIn(authForm.username, authForm.password)
 
         if (error) {
           alert(typeof error === "object" && error !== null && "message" in error ? (error as any).message : "Login failed")

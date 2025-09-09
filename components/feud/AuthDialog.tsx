@@ -5,7 +5,7 @@ import { TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, LogIn, UserPlus } from "lucide-react"
+import { LogIn, UserPlus } from "lucide-react"
 
 interface AuthDialogProps {
   authMode: "login" | "register"
@@ -20,7 +20,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
     <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: "url('/idle-bg.png')",
+        backgroundImage: "url('img/FAMFEUD_BACKGROUND.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -29,12 +29,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <Card className="w-full max-w-md bg-gray-900/90 border-gray-800 shadow-2xl relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
           <div>
             <CardTitle className="text-3xl font-bold text-white mb-2">Family Feud</CardTitle>
-            <p className="text-gray-400">Admin Control Center</p>
           </div>
         </CardHeader>
         <CardContent>
@@ -47,33 +43,28 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
                 Register
               </TabsTrigger>
             </TabsList>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="username" className="text-gray-300">
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  value={authForm.username}
-                  onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
-                  className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                  placeholder="Enter username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email" className="text-gray-300">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={authForm.email}
-                  onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                  className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                  placeholder="Enter email"
-                />
-              </div>
-              <div>
+  
+              {/* Login Tab */}
+            <div className="mb-6">
+            <TabsContent value="login">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="username" className="text-gray-300">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    value={authForm.username}
+                    onChange={(e) =>
+                      setAuthForm({ ...authForm, username: e.target.value })
+                    }
+                    className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                    placeholder="Enter username"
+                    autoComplete="false"
+                  />
+                </div>
+
+                <div>
                 <Label htmlFor="password" className="text-gray-300">
                   Password
                 </Label>
@@ -86,6 +77,60 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
                   placeholder="Enter password"
                 />
               </div>
+              </div>
+            </TabsContent>
+
+            {/* Register Tab */}
+            <TabsContent value="register">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="username" className="text-gray-300">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    value={authForm.username}
+                    onChange={(e) =>
+                      setAuthForm({ ...authForm, username: e.target.value })
+                    }
+                    className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                    placeholder="Enter username"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-gray-300">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={authForm.email}
+                    onChange={(e) =>
+                      setAuthForm({ ...authForm, email: e.target.value })
+                    }
+                    className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                    placeholder="Enter email"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="text-gray-300">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={authForm.password}
+                    onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                    className="bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                    placeholder="Enter password"
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            </div>
               <Button
                 onClick={handleAuth}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -102,7 +147,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
                   </>
                 )}
               </Button>
-            </div>
+            
           </Tabs>
         </CardContent>
       </Card>
@@ -111,3 +156,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ authMode, setAuthMode, authForm
 }
 
 export default AuthDialog 
+
+
+    
